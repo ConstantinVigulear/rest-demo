@@ -1,10 +1,9 @@
 package com.vigulear.restdemo.entity;
 
 import jakarta.persistence.*;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
+@SuppressWarnings({"JpaDataSourceORMInspection", "unused"})
 @Entity
 @Table(name = "persons")
 public class Person {

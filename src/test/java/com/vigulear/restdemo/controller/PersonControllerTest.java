@@ -3,7 +3,6 @@ package com.vigulear.restdemo.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vigulear.restdemo.entity.Person;
 import com.vigulear.restdemo.service.PersonService;
-import org.aspectj.lang.annotation.Aspect;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -26,9 +25,7 @@ class PersonControllerTest {
   @Mock PersonService personService;
 
   @BeforeEach
-  void setUp() {
-
-  }
+  void setUp() {}
 
   @Test
   void getPersonById() throws Exception {
