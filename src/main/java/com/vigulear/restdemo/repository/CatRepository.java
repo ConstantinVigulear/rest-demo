@@ -1,6 +1,7 @@
 package com.vigulear.restdemo.repository;
 
 import com.vigulear.restdemo.entity.Cat;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -34,4 +35,5 @@ public interface CatRepository extends JpaRepository<Cat, Long> {
           + "ELSE 0 END) "
           + "FROM Cat c")
   Integer findTotalBy(@Param("fieldName") String fieldName);
+
 }

@@ -6,7 +6,6 @@ import java.util.List;
 import com.vigulear.restdemo.dto.CatDto;
 import com.vigulear.restdemo.entity.Cat;
 import com.vigulear.restdemo.exceptions.InvalidValueException;
-import com.vigulear.restdemo.exceptions.NoContentException;
 import com.vigulear.restdemo.service.CatService;
 import com.vigulear.restdemo.util.FieldUtility;
 import org.springframework.data.domain.Sort;
@@ -48,7 +47,7 @@ public class CatController {
     CatDto cat = catService.findById(id);
 
     if (cat == null) {
-      throw new NoContentException("Cat with id = '" + id + "' is not found");
+      throw new InvalidValueException("Cat with id = '" + id + "' is not found");
     }
 
     return new ResponseEntity<>(cat, HttpStatus.OK);
@@ -96,7 +95,7 @@ public class CatController {
 
     if (youngestCat != null) return ResponseEntity.ok(youngestCat);
     else {
-      throw new NoContentException("There are no records in data base");
+      throw new InvalidValueException("There are no records in data base");
     }
   }
 
@@ -110,5 +109,11 @@ public class CatController {
     } else {
       throw new InvalidValueException("No such field as '" + fieldName + "'");
     }
+  }
+
+  @DeleteMapping("/delete/{id}")
+  public ResponseEntity<CatDto> deleteById(@PathVariable Long id) throws InvalidValueException {
+    CatDto deletedCatDto = catService.deleteById(id);
+    return new ResponseEntity<>(deletedCatDto, HttpStatus.OK);
   }
 }

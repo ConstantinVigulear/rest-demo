@@ -2,6 +2,7 @@ package com.vigulear.restdemo.service;
 
 import com.vigulear.restdemo.dto.CatDto;
 import com.vigulear.restdemo.entity.Cat;
+import com.vigulear.restdemo.exceptions.InvalidValueException;
 import org.springframework.data.domain.Sort;
 
 import java.util.List;
@@ -19,4 +20,5 @@ public interface CatService {
     Integer findTotalBy(String fieldName);
     CatDto createCat(Cat cat);
     List<CatDto> createAllCats(List<Cat> cats);
+    CatDto deleteById(Long id) throws InvalidValueException;
 }

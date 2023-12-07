@@ -1,15 +1,18 @@
 package com.vigulear.restdemo.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.vigulear.restdemo.dto.CatDto;
 import com.vigulear.restdemo.entity.Cat;
+import com.vigulear.restdemo.exceptions.InvalidValueException;
 import com.vigulear.restdemo.mapper.CatMapper;
 import com.vigulear.restdemo.repository.CatRepository;
-import com.vigulear.restdemo.service.impl.CatServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,10 +21,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * @author : crme059
- * @created : 04-Dec-23, Monday
- * Todo: test the rest of the class
+ * @created : 04-Dec-23, Monday Todo: test the rest of the class
  */
-
 @ExtendWith(MockitoExtension.class)
 class CatServiceImplTest {
 
@@ -57,4 +58,45 @@ class CatServiceImplTest {
 
   @Test
   void findTotalBy() {}
+
+  @Test
+  void findById() {}
+
+  @Test
+  void createCat() {}
+
+  @Test
+  void createAllCats() {
+    List<Cat> cats =
+        List.of(
+            Cat.builder().name("Humus").age(1).build(),
+            Cat.builder().name("Couscous").age(0).build());
+    List<CatDto> catDtos = cats.stream().map(CatMapper::mapToCatDto).toList();
+
+    when(catRepository.saveAll(cats)).thenReturn(cats);
+
+    List<CatDto> savedCatDtos = catService.createAllCats(cats);
+
+    assertThat(catDtos).isEqualTo(savedCatDtos);
+  }
+
+  @Test
+  void deleteById_validId_returnDeletedCatDto() throws InvalidValueException {
+    Cat catToDelete = Cat.builder().id(1L).name("Humus").age(1).build();
+    CatDto catToDeleteDto = CatMapper.mapToCatDto(catToDelete);
+    when(catRepository.findById(catToDelete.getId())).thenReturn(Optional.of(catToDelete));
+
+    CatDto deletedCatDto = catService.deleteById(catToDelete.getId());
+
+    assertThat(catToDeleteDto).isEqualTo(deletedCatDto);
+  }
+
+  @Test
+  void deleteById_validId_throwNoContentException() {
+    Long id = 1001L;
+    when(catRepository.findById(id)).thenReturn(Optional.empty());
+    assertThatThrownBy(() -> catService.deleteById(id))
+        .isInstanceOf(InvalidValueException.class)
+        .hasMessage("There is no cat with id = \"" + id + "\"");
+  }
 }

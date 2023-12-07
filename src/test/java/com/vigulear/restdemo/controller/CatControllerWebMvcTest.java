@@ -2,8 +2,7 @@ package com.vigulear.restdemo.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,6 +10,7 @@ import java.util.List;
 
 import com.vigulear.restdemo.dto.CatDto;
 import com.vigulear.restdemo.entity.Cat;
+import com.vigulear.restdemo.exceptions.InvalidValueException;
 import com.vigulear.restdemo.mapper.CatMapper;
 import com.vigulear.restdemo.service.CatService;
 import org.junit.jupiter.api.DisplayName;
@@ -31,8 +31,7 @@ class CatControllerWebMvcTest {
 
   @Autowired MockMvc mockMvc;
 
-  @MockBean
-  CatService catService; // @MockBean integrates catService into Spring
+  @MockBean CatService catService; // @MockBean integrates catService into Spring
 
   @Autowired ObjectMapper objectMapper;
 
@@ -82,8 +81,9 @@ class CatControllerWebMvcTest {
   }
 
   @Test
-  @DisplayName("GET /cat/{id} with valid Payload throws NoContentException and HTTP 204 No Content")
-  void getCatById_validPayload_throwsNoContentException() throws Exception {
+  @DisplayName(
+      "GET /cat/{id} with valid Payload throws InvalidValueException and HTTP 400 Bad Request")
+  void getCatById_validPayload_throwsInvalidValueException() throws Exception {
     Long id = -1L;
 
     when(catService.findById(id)).thenReturn(null);
@@ -91,7 +91,7 @@ class CatControllerWebMvcTest {
     mockMvc
         .perform(get("/cat/{id}", id))
         .andExpectAll(
-            status().isNoContent(),
+            status().isBadRequest(),
             content().contentType(MediaType.TEXT_PLAIN_VALUE + ";charset=UTF-8"),
             content().string("Cat with id = '" + id + "' is not found"));
 
@@ -118,16 +118,16 @@ class CatControllerWebMvcTest {
   @DisplayName("GET /cat returns list of cat dtos and Http 200 Ok")
   void getAllCats() throws Exception {
     List<Cat> cats =
-            List.of(
-                    Cat.builder().id(1001L).name("Couscous").age(0).build(),
-                    Cat.builder().id(1002L).name("Tiramisu").age(7).build());
+        List.of(
+            Cat.builder().id(1001L).name("Couscous").age(0).build(),
+            Cat.builder().id(1002L).name("Tiramisu").age(7).build());
     List<CatDto> catDtos = cats.stream().map(CatMapper::mapToCatDto).toList();
 
     when(catService.findAll()).thenReturn(catDtos);
 
-    mockMvc.perform(get("/cat")).andExpectAll(
-            status().isOk(),
-            content().json(objectMapper.writeValueAsString(catDtos)));
+    mockMvc
+        .perform(get("/cat"))
+        .andExpectAll(status().isOk(), content().json(objectMapper.writeValueAsString(catDtos)));
     verify(catService, times(1)).findAll();
   }
 
@@ -247,15 +247,15 @@ class CatControllerWebMvcTest {
   }
 
   @Test
-  @DisplayName("GET /cat/youngest throws NotFoundException and Http 204 No Content")
-  void findTheYoungest_throwsNoContentException() throws Exception {
+  @DisplayName("GET /cat/youngest throws InvalidValueException and Http 400 Bad Request")
+  void findTheYoungest_throwsInvalidValueException() throws Exception {
 
     when(catService.findFirstByOrderByAge()).thenReturn(null);
 
     mockMvc
         .perform(get("/cat/youngest"))
         .andExpectAll(
-            status().isNoContent(),
+            status().isBadRequest(),
             content().contentType(MediaType.TEXT_PLAIN_VALUE + ";charset=UTF-8"),
             content().string("There are no records in data base"));
 
@@ -292,5 +292,38 @@ class CatControllerWebMvcTest {
             content().contentType(MediaType.TEXT_PLAIN_VALUE + ";charset=UTF-8"),
             content().string("No such field as '" + fieldName + "'"));
     verify(catService, times(0)).findTotalBy(any());
+  }
+
+  @Test
+  @DisplayName("DELETE /cat/delete/{id} with valid id returns deleted catDto and Http 200 Ok")
+  void deleteById_validId_returnsDeletedCatDto() throws Exception {
+    var catToDelete = Cat.builder().id(1L).build();
+    var catToDeleteDto = CatMapper.mapToCatDto(catToDelete);
+    var catToDeleteDtoJson = objectMapper.writeValueAsString(catToDeleteDto);
+    when(catService.deleteById(catToDelete.getId())).thenReturn(catToDeleteDto);
+
+    mockMvc
+        .perform(delete("/cat/delete/{id}", catToDelete.getId()))
+        .andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            content().json(catToDeleteDtoJson),
+            jsonPath("$.id").value(catToDelete.getId()));
+    verify(catService, times(1)).deleteById(any());
+  }
+
+  @Test
+  @DisplayName(
+      "DELETE /cat/delete/{id} with invalid id throws InvalidValueException and Http 400 Bad Request")
+  void deleteById_invalidId_throwsInvalidValueException() throws Exception {
+    Long id = -1L;
+    String errorMessage = "There is no cat with id = \"" + id + "\"";
+    when(catService.deleteById(id)).thenThrow(new InvalidValueException(errorMessage));
+    mockMvc
+        .perform(delete("/cat/delete/{id}", id))
+        .andExpectAll(
+            status().isBadRequest(),
+            content().contentType(MediaType.TEXT_PLAIN_VALUE + ";charset=UTF-8"),
+            content().string(errorMessage));
   }
 }

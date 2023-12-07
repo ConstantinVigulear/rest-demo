@@ -2,6 +2,7 @@ package com.vigulear.restdemo.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.PositiveOrZero;
 
 import java.util.Objects;
 

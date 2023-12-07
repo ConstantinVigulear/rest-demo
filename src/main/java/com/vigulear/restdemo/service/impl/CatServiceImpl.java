@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import com.vigulear.restdemo.dto.CatDto;
 import com.vigulear.restdemo.entity.Cat;
+import com.vigulear.restdemo.exceptions.InvalidValueException;
 import com.vigulear.restdemo.mapper.CatMapper;
 import com.vigulear.restdemo.repository.CatRepository;
 import com.vigulear.restdemo.service.CatService;
@@ -75,5 +76,14 @@ public class CatServiceImpl implements CatService {
     return newCats.stream().map(CatMapper::mapToCatDto).collect(Collectors.toList());
   }
 
+  @Override
+  public CatDto deleteById(Long id) throws InvalidValueException {
+    Cat catToDelete = catRepository.findById(id).orElse(null);
 
+    if(catToDelete == null) {
+      throw new InvalidValueException("There is no cat with id = \"" + id + "\"");
+    }
+    catRepository.deleteById(catToDelete.getId());
+    return CatMapper.mapToCatDto(catToDelete);
+  }
 }

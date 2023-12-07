@@ -25,13 +25,6 @@ public class GlobalExceptionHandler {
   }
 
   @ExceptionHandler
-  public ResponseEntity<String> handleNotFoundException(NoContentException exception) {
-    log.error("Bad request error: {}", exception.toString());
-    exception.printStackTrace();
-    return new ResponseEntity<>(exception.getMessage(), HttpStatus.NO_CONTENT);
-  }
-
-  @ExceptionHandler
   public ResponseEntity<String> handleMethodArgumentTypeMismatchException(
       MethodArgumentTypeMismatchException exception) {
     log.error("Bad request error: {}", exception.toString());
