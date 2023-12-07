@@ -4,4 +4,4 @@
 3. Unit test for @Service layer using @ExtendWith(MockitoExtension.class)
 4. Isolated unit test for @RestController using @WebMvcTest(CatController.class) and ObjectMapper (also with manual configuration)
 5. Integration tests for @RestController
-6. Useful notes in Notes.txt
+6. Useful notes in Notes.md
