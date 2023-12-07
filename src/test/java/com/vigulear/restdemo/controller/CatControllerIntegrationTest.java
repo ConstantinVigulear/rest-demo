@@ -1,48 +1,49 @@
 package com.vigulear.restdemo.controller;
 
+import com.vigulear.restdemo.service.CatService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.web.servlet.MockMvc;
 
 /**
  * @author : crme059
  * @created : 06-Dec-23, Wednesday
-**/
-    class CatControllerIntegrationTest {
+ */
+@SpringBootTest
+@AutoConfigureMockMvc
+class CatControllerIntegrationTest {
 
-    @BeforeEach
-    void setUp() {
-      }
+  @Autowired MockMvc mockMvc;
+  @Autowired CatService catService;
 
-    @AfterEach
-    void tearDown() {
-      }
+  @BeforeEach
+  void setUp() {}
 
-    @Test
-    void createCat() {
-      }
+  @AfterEach
+  void tearDown() {}
 
-    @Test
-    void getAllCats() {
-      }
+  @Test
+  void createCat() {}
 
-    @Test
-    void getCatById() {
-      }
+  @Test
+  void getAllCats() {}
 
-    @Test
-    void getTopByField() {
-      }
+  @Test
+  void getCatById() {}
 
-    @Test
-    void getTopThree() {
-      }
+  @Test
+  void getTopByField() {}
 
-    @Test
-    void findTheYoungest() {
-      }
+  @Test
+  void getTopThree() {}
 
-    @Test
-    void findTotalBy() {
-      }
+  @Test
+  void findTheYoungest() {}
+
+  @Test
+  void findTotalBy() {}
 }

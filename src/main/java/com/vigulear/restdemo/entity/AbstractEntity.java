@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
  * @author : crme059
  * @created : 30-Nov-23, Thursday
  */
+@SuppressWarnings("unused")
 @MappedSuperclass
 public abstract class AbstractEntity {
   @Id

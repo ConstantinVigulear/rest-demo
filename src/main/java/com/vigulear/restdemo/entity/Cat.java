@@ -50,8 +50,8 @@ public class Cat extends AbstractEntity implements Animal {
   }
 
   @Override
-  public void sound() {
-    System.out.println("Meow");
+  public String sound() {
+    return "Meow";
   }
 
   public static class Builder {

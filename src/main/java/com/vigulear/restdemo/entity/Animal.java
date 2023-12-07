@@ -5,5 +5,5 @@ package com.vigulear.restdemo.entity;
  * @created : 30-Nov-23, Thursday
  */
 public interface Animal {
-    void sound();
+    String sound();
 }
