@@ -20,7 +20,6 @@ public class GlobalExceptionHandler {
   @ExceptionHandler
   public ResponseEntity<String> handleException(Exception exception) {
     log.error("Bad request error: {}", exception.toString());
-    exception.printStackTrace();
     return new ResponseEntity<>(exception.getMessage(), HttpStatus.BAD_REQUEST);
   }
 
@@ -28,7 +27,6 @@ public class GlobalExceptionHandler {
   public ResponseEntity<String> handleMethodArgumentTypeMismatchException(
       MethodArgumentTypeMismatchException exception) {
     log.error("Bad request error: {}", exception.toString());
-    exception.printStackTrace();
     return new ResponseEntity<>(
         "Invalid value \"" + exception.getValue() + "\" for parameter", HttpStatus.BAD_REQUEST);
   }

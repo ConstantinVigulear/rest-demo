@@ -1,7 +1,6 @@
 package com.vigulear.restdemo.repository;
 
 import com.vigulear.restdemo.entity.Cat;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
