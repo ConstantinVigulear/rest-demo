@@ -1,4 +1,4 @@
-package com.vigulear.restdemo;
+package com.vigulear.restdemo.bootstrap;
 
 import java.util.List;
 
