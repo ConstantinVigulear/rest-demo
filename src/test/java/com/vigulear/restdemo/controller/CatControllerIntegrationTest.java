@@ -1,20 +1,21 @@
 package com.vigulear.restdemo.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vigulear.restdemo.dto.CatDto;
 import com.vigulear.restdemo.entity.Cat;
-import com.vigulear.restdemo.exceptions.InvalidValueException;
-import com.vigulear.restdemo.service.CatService;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * @author : crme059
@@ -25,78 +26,123 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CatControllerIntegrationTest {
 
   @Autowired MockMvc mockMvc;
-  @Autowired CatService catService;
-  List<Cat> cats;
+  @Autowired ObjectMapper objectMapper;
 
-  @BeforeEach
-  void init() {
-    cats =
-        List.of(
-            Cat.builder().name("Humus").age(1).build(),
-            Cat.builder().name("Couscous").age(0).build(),
-            Cat.builder().name("Tiramisu").age(7).build(),
-            Cat.builder().name("Object").age(3).build(),
-            Cat.builder().name("Engin").age(9).build(),
-            Cat.builder().name("Revision").age(8).build(),
-            Cat.builder().name("Jacobson").age(10).build(),
-            Cat.builder().name("Ivar").age(4).build(),
-            Cat.builder().name("Enzo").age(6).build(),
-            Cat.builder().name("Finland").age(15).build(),
-            Cat.builder().name("Robert").age(13).build());
-  }
+  @Test
+  void createCat() throws Exception {
+    Cat cat = Cat.builder().name("Napoleon").age(11).build();
+    String catJson = objectMapper.writeValueAsString(cat);
 
-  @AfterEach
-  void tearDown() {
-    List<CatDto> catsFromDatabase = catService.findAll();
-    catsFromDatabase.forEach(
-        cat -> {
-          try {
-            catService.deleteById(cat.getId());
-          } catch (InvalidValueException e) {
-            throw new RuntimeException(e);
-          }
-        });
+    mockMvc
+        .perform(post("/cat/create").contentType(MediaType.APPLICATION_JSON).content(catJson))
+        .andExpectAll(
+            status().isCreated(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.name").value("Napoleon"),
+            jsonPath("$.age").value(11));
   }
 
   @Test
-  void createCat() {
-    Cat catNew = Cat.builder().name("Napoleon").age(11).build();
-    CatDto catNewDto = catService.createCat(catNew);
+  void getAllCats() throws Exception {
+    String answer =
+        mockMvc
+            .perform(get("/cat"))
+            .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
 
-    List<CatDto> allCats = catService.findAll();
+    List<CatDto> catDtos = objectMapper.readValue(answer, new TypeReference<>() {});
 
-    assertThat(allCats).contains(catNewDto);
+    assertThat(catDtos).isNotNull().isNotEmpty();
   }
 
   @Test
-  void getAllCats() {
-    Integer initialSize = catService.findAll().size();
+  void getCatById() throws Exception {
+    Long id = 1001L;
 
-    catService.createAllCats(cats);
-    Integer updatedSize = catService.findAll().size();
-
-    assertThat(updatedSize).isNotEqualTo(initialSize).isGreaterThan(initialSize);
+    mockMvc
+        .perform(get("/cat/{id}", id))
+        .andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.id").value(id))
+        .andReturn()
+        .getResponse()
+        .getContentAsString();
   }
 
   @Test
-  void getCatById() {
-    List<CatDto> createdCats = catService.createAllCats(cats);
-    CatDto catDtoSaved = createdCats.getFirst();
+  void getTopByField() throws Exception {
+    int quantity = 6;
+    String fieldName = "age";
 
-    CatDto catDtoQueried = catService.findById(catDtoSaved.getId());
+    String response =
+        mockMvc
+            .perform(get("/cat/?top={top}&fieldName={fieldName}", quantity, fieldName))
+            .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
 
-    assertThat(catDtoSaved).isEqualTo(catDtoQueried);
+    List<CatDto> catDtosResponse = objectMapper.readValue(response, new TypeReference<>() {});
+
+    assertThat(catDtosResponse).isNotNull().isNotEmpty().size().isEqualTo(quantity);
+    for (int i = 0; i < catDtosResponse.size() - 1; i++) {
+      assertThat(catDtosResponse.get(i).getAge())
+          .isLessThanOrEqualTo(catDtosResponse.get(i + 1).getAge());
+    }
   }
 
   @Test
-  void getTopByField() {}
+  void getTopThree() throws Exception {
+    String fieldName = "name";
+
+    String response =
+        mockMvc
+            .perform(get("/cat/top3?fieldName={fieldName}", fieldName))
+            .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    List<CatDto> catDtosResponse = objectMapper.readValue(response, new TypeReference<>() {});
+
+    assertThat(catDtosResponse).isNotNull().isNotEmpty().size().isEqualTo(3);
+    for (int i = 0; i < catDtosResponse.size() - 1; i++) {
+      assertThat(catDtosResponse.get(i).getName())
+          .isLessThanOrEqualTo(catDtosResponse.get(i + 1).getName());
+    }
+  }
 
   @Test
-  void getTopThree() {}
+  void findTheYoungest() throws Exception {
+    int smallestAge = 0;
+
+    String response =
+        mockMvc
+            .perform(get("/cat/youngest"))
+            .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    CatDto catDto = objectMapper.readValue(response, CatDto.class);
+
+    assertThat(catDto.getAge()).isEqualTo(smallestAge);
+  }
 
   @Test
-  void findTheYoungest() {}
+  void findTotalBy() throws Exception {
+    String fieldName = "age";
+    String response =
+        mockMvc
+            .perform(get("/cat/total?fieldName={fieldName}", fieldName))
+            .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
 
-  @Test
-  void findTotalBy() {}
+    assertThat(Integer.parseInt(response)).isGreaterThan(0);
+  }
 }
