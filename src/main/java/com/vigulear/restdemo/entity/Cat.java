@@ -59,9 +59,6 @@ public class Cat extends AbstractEntity<Cat> implements Animal {
     private Long id;
     private String name;
     private Integer age;
-    private Integer version;
-    private LocalDateTime createdOn;
-    private LocalDateTime updatedOn;
 
     public Builder id(Long id) {
       this.id = id;

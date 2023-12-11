@@ -134,8 +134,4 @@ public class CatController {
     CatDto deletedCatDto = catService.deleteById(id);
     return new ResponseEntity<>(deletedCatDto, HttpStatus.OK);
   }
-
-  protected boolean canEqual(final Object other) {
-    return other instanceof CatController;
-  }
 }

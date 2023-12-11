@@ -5,10 +5,8 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import com.vigulear.restdemo.dto.CatDto;
@@ -91,7 +89,7 @@ class CatControllerWebMvcTest {
 
     when(catService.updateById(catToUpdate.getId(), catToUpdate))
         .thenThrow(
-            new InvalidValueException("There is no cat with id = " + catToUpdate.getId() + ""));
+            new InvalidValueException("There is no cat with id = " + catToUpdate.getId()));
     mockMvc
         .perform(
             put("/cat/update/{id}", catToUpdate.getId())

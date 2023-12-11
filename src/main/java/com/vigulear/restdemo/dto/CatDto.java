@@ -1,13 +1,10 @@
 package com.vigulear.restdemo.dto;
 
 
-import jakarta.persistence.Version;
 import lombok.Builder;
 import lombok.Data;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 /**
  * @author : crme059
