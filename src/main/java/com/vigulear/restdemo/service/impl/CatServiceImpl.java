@@ -77,14 +77,13 @@ public class CatServiceImpl implements CatService {
   }
 
   @Override
-  public CatDto deleteById(Long id) throws InvalidValueException {
+  public void deleteById(Long id) throws InvalidValueException {
     Cat catToDelete = catRepository.findById(id).orElse(null);
 
     if (catToDelete == null) {
       throw new InvalidValueException("There is no cat with id = " + id);
     }
     catRepository.deleteById(catToDelete.getId());
-    return CatMapper.mapToCatDto(catToDelete);
   }
 
   @Override

@@ -130,8 +130,8 @@ public class CatController {
   }
 
   @DeleteMapping("/delete/{id}")
-  public ResponseEntity<CatDto> deleteById(@PathVariable Long id) throws InvalidValueException {
-    CatDto deletedCatDto = catService.deleteById(id);
-    return new ResponseEntity<>(deletedCatDto, HttpStatus.OK);
+  public ResponseEntity<?> deleteById(@PathVariable Long id) throws InvalidValueException {
+    catService.deleteById(id);
+    return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
   }
 }

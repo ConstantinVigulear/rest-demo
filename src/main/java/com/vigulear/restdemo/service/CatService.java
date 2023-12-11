@@ -20,7 +20,7 @@ public interface CatService {
     Integer findTotalBy(String fieldName);
     CatDto createCat(Cat cat);
     List<CatDto> createAllCats(List<Cat> cats);
-    CatDto deleteById(Long id) throws InvalidValueException;
+    void deleteById(Long id) throws InvalidValueException;
 
     CatDto updateById(Long id, Cat cat) throws InvalidValueException;
 }

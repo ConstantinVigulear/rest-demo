@@ -16,6 +16,7 @@ import com.vigulear.restdemo.mapper.CatMapper;
 import com.vigulear.restdemo.service.CatService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -342,16 +343,13 @@ class CatControllerWebMvcTest {
   void deleteById_validId_returnsDeletedCatDto() throws Exception {
     var catToDelete = Cat.builder().id(1L).build();
     var catToDeleteDto = CatMapper.mapToCatDto(catToDelete);
-    var catToDeleteDtoJson = objectMapper.writeValueAsString(catToDeleteDto);
-    when(catService.deleteById(catToDelete.getId())).thenReturn(catToDeleteDto);
+
+    doNothing().when(catService).deleteById(catToDelete.getId());
 
     mockMvc
         .perform(delete("/cat/delete/{id}", catToDelete.getId()))
-        .andExpectAll(
-            status().isOk(),
-            content().contentType(MediaType.APPLICATION_JSON),
-            content().json(catToDeleteDtoJson),
-            jsonPath("$.id").value(catToDelete.getId()));
+        .andExpect(
+            status().isNoContent());
     verify(catService, times(1)).deleteById(any());
   }
 
@@ -360,8 +358,12 @@ class CatControllerWebMvcTest {
       "DELETE /cat/delete/{id} with invalid id throws InvalidValueException and Http 400 Bad Request")
   void deleteById_invalidId_throwsInvalidValueException() throws Exception {
     Long id = -1L;
-    String errorMessage = "There is no cat with id = \"" + id + "\"";
-    when(catService.deleteById(id)).thenThrow(new InvalidValueException(errorMessage));
+    String errorMessage = "There is no cat with id = " + id;
+
+    doThrow(new InvalidValueException("There is no cat with id = " + id))
+        .when(catService)
+        .deleteById(id);
+
     mockMvc
         .perform(delete("/cat/delete/{id}", id))
         .andExpectAll(

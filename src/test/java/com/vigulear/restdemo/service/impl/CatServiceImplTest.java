@@ -2,7 +2,7 @@ package com.vigulear.restdemo.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -82,16 +82,15 @@ class CatServiceImplTest {
   @Test
   void deleteById_validId_returnDeletedCatDto() throws InvalidValueException {
     Cat catToDelete = Cat.builder().id(1L).name("Humus").age(1).build();
-    CatDto catToDeleteDto = CatMapper.mapToCatDto(catToDelete);
     when(catRepository.findById(catToDelete.getId())).thenReturn(Optional.of(catToDelete));
 
-    CatDto deletedCatDto = catService.deleteById(catToDelete.getId());
+    catService.deleteById(catToDelete.getId());
 
-    assertThat(catToDeleteDto).isEqualTo(deletedCatDto);
+    verify(catRepository, times(1)).deleteById(catToDelete.getId());
   }
 
   @Test
-  void deleteById_validId_throwNoContentException() {
+  void deleteById_validId_throwsInvalidValueException() {
     Long id = 1001L;
     when(catRepository.findById(id)).thenReturn(Optional.empty());
     assertThatThrownBy(() -> catService.deleteById(id))
