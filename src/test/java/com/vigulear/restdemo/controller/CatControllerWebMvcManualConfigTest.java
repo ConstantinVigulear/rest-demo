@@ -60,4 +60,8 @@ class CatControllerWebMvcManualConfigTest {
 
     verify(catService, times(1)).createCat(any());
   }
+
+  /*
+  Todo: The rest test are identical to one from CatControllerWebMvcTest
+   */
 }

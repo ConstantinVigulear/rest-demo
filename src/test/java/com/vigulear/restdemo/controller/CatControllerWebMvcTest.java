@@ -5,7 +5,10 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.vigulear.restdemo.dto.CatDto;
@@ -59,6 +62,48 @@ class CatControllerWebMvcTest {
   }
 
   @Test
+  @DisplayName("PUT /cat/update/{id} with valid Payload returns Http 200 Ok")
+  void updateById_validPayload_returnsUpdatedCatDto() throws Exception {
+    Cat catToUpdate = Cat.builder().id(1001L).name("Millefoglie").age(10).build();
+    String catToUpdateJson = objectMapper.writeValueAsString(catToUpdate);
+    CatDto catToUpdateDto = CatMapper.mapToCatDto(catToUpdate);
+    String catToUpdateDtoJson = objectMapper.writeValueAsString(catToUpdateDto);
+
+    when(catService.updateById(catToUpdate.getId(), catToUpdate)).thenReturn(catToUpdateDto);
+    mockMvc
+        .perform(
+            put("/cat/update/{id}", catToUpdate.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(catToUpdateJson))
+        .andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            content().json(catToUpdateDtoJson),
+            jsonPath("$.name").value("Millefoglie"));
+  }
+
+  @Test
+  @DisplayName(
+      "PUT /cat/update/{id} with invalid id throws InvalidValueException Http 400 Bad Request")
+  void updateById_invalidId_throwsInvalidValueException() throws Exception {
+    Cat catToUpdate = Cat.builder().id(-1L).name("Millefoglie").age(10).build();
+    String catToUpdateJson = objectMapper.writeValueAsString(catToUpdate);
+
+    when(catService.updateById(catToUpdate.getId(), catToUpdate))
+        .thenThrow(
+            new InvalidValueException("There is no cat with id = " + catToUpdate.getId() + ""));
+    mockMvc
+        .perform(
+            put("/cat/update/{id}", catToUpdate.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(catToUpdateJson))
+        .andExpectAll(
+            status().isBadRequest(),
+            content().contentType(MediaType.TEXT_PLAIN_VALUE + ";charset=UTF-8"),
+            content().string("There is no cat with id = " + catToUpdate.getId()));
+  }
+
+  @Test
   @DisplayName("GET /cat/{id} with valid Payload returns catDto and Http 201 Ok ")
   void getCatById_validPayload_returnCatDto() throws Exception {
     Cat cat = Cat.builder().id(1001L).name("Couscous").age(10).build();
@@ -82,7 +127,7 @@ class CatControllerWebMvcTest {
 
   @Test
   @DisplayName(
-      "GET /cat/{id} with valid Payload throws InvalidValueException and HTTP 400 Bad Request")
+      "GET /cat/{id} with invalid id throws InvalidValueException and HTTP 400 Bad Request")
   void getCatById_validPayload_throwsInvalidValueException() throws Exception {
     Long id = -1L;
 

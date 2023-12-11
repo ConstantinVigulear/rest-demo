@@ -21,4 +21,6 @@ public interface CatService {
     CatDto createCat(Cat cat);
     List<CatDto> createAllCats(List<Cat> cats);
     CatDto deleteById(Long id) throws InvalidValueException;
+
+    CatDto updateById(Long id, Cat cat) throws InvalidValueException;
 }

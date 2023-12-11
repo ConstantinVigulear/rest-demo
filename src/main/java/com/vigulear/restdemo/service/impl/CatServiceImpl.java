@@ -1,5 +1,6 @@
 package com.vigulear.restdemo.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,7 +19,6 @@ import static com.vigulear.restdemo.mapper.CatMapper.mapToCatDto;
  * @author : crme059
  * @created : 30-Nov-23, Thursday
  */
-
 @Service
 public class CatServiceImpl implements CatService {
 
@@ -31,8 +31,8 @@ public class CatServiceImpl implements CatService {
   @Override
   public CatDto findById(Long id) {
     var cat = catRepository.findById(id).orElse(null);
-      assert cat != null;
-      return mapToCatDto(cat);
+    assert cat != null;
+    return mapToCatDto(cat);
   }
 
   @Override
@@ -80,10 +80,29 @@ public class CatServiceImpl implements CatService {
   public CatDto deleteById(Long id) throws InvalidValueException {
     Cat catToDelete = catRepository.findById(id).orElse(null);
 
-    if(catToDelete == null) {
-      throw new InvalidValueException("There is no cat with id = \"" + id + "\"");
+    if (catToDelete == null) {
+      throw new InvalidValueException("There is no cat with id = " + id);
     }
     catRepository.deleteById(catToDelete.getId());
     return CatMapper.mapToCatDto(catToDelete);
+  }
+
+  @Override
+  public CatDto updateById(Long id, Cat cat) throws InvalidValueException {
+    Cat catById = catRepository.findById(id).orElse(null);
+
+    if (catById != null ) {
+      catById
+              .setId(cat.getId() != null ? cat.getId() : catById.getId())
+              .setName(cat.getName() != null ? cat.getName() : catById.getName())
+              .setAge(cat.getAge() != null ? cat.getAge() : catById.getAge())
+              .setVersion(cat.getVersion() != null ? cat.getVersion() + 1 : catById.getVersion() + 1)
+              .setCreatedOn(cat.getCreatedOn() != null ? cat.getCreatedOn() : catById.getCreatedOn())
+              .setUpdatedOn(LocalDateTime.now());
+    }
+
+    else throw new InvalidValueException("There is no cat with id = " + id);
+
+    return CatMapper.mapToCatDto(catRepository.save(catById));
   }
 }

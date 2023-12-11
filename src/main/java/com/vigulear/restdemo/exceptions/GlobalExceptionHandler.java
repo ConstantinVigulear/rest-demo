@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -20,6 +21,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler
   public ResponseEntity<String> handleException(Exception exception) {
     log.error("Bad request error: {}", exception.toString());
+    exception.printStackTrace();
     return new ResponseEntity<>(exception.getMessage(), HttpStatus.BAD_REQUEST);
   }
 
@@ -27,7 +29,16 @@ public class GlobalExceptionHandler {
   public ResponseEntity<String> handleMethodArgumentTypeMismatchException(
       MethodArgumentTypeMismatchException exception) {
     log.error("Bad request error: {}", exception.toString());
+    exception.printStackTrace();
     return new ResponseEntity<>(
         "Invalid value \"" + exception.getValue() + "\" for parameter", HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler
+  public ResponseEntity<String> handleHttpMessageNotReadableException(
+      HttpMessageNotReadableException exception) {
+    log.error("Bad request error: {}", exception.toString());
+    exception.printStackTrace();
+    return new ResponseEntity<>("Unrecognized token for parameter", HttpStatus.BAD_REQUEST);
   }
 }

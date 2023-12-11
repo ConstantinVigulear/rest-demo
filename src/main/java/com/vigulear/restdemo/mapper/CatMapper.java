@@ -1,6 +1,5 @@
 package com.vigulear.restdemo.mapper;
 
-
 import com.vigulear.restdemo.dto.CatDto;
 import com.vigulear.restdemo.entity.Cat;
 
@@ -11,6 +10,14 @@ import com.vigulear.restdemo.entity.Cat;
 public class CatMapper {
   public static CatDto mapToCatDto(Cat cat) {
     if (cat == null) return null;
-    else return new CatDto().setId(cat.getId()).setName(cat.getName()).setAge(cat.getAge());
+    else
+      return CatDto.builder()
+          .id(cat.getId())
+          .name(cat.getName())
+          .age(cat.getAge())
+          .version(cat.getVersion())
+          .createdOn(cat.getCreatedOn())
+          .updateOn(cat.getUpdatedOn())
+          .build();
   }
 }

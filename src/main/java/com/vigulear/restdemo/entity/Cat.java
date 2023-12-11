@@ -3,6 +3,7 @@ package com.vigulear.restdemo.entity;
 import jakarta.persistence.Entity;
 import jakarta.validation.constraints.NotEmpty;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
@@ -10,30 +11,30 @@ import java.util.Objects;
  * @created : 30-Nov-23, Thursday
  */
 @Entity
-public class Cat extends AbstractEntity implements Animal {
+public class Cat extends AbstractEntity<Cat> implements Animal {
 
-  @NotEmpty
-  private String name = "";
+  @NotEmpty private String name = "";
 
   @NotEmpty private Integer age = 0;
 
-  protected Cat() {
-  }
+  protected Cat() {}
 
   public String getName() {
     return name;
   }
 
-  public void setName(String name) {
+  public Cat setName(String name) {
     this.name = name;
+    return this;
   }
 
   public Integer getAge() {
     return age;
   }
 
-  public void setAge(Integer age) {
+  public Cat setAge(Integer age) {
     this.age = age;
+    return this;
   }
 
   @Override
@@ -58,6 +59,9 @@ public class Cat extends AbstractEntity implements Animal {
     private Long id;
     private String name;
     private Integer age;
+    private Integer version;
+    private LocalDateTime createdOn;
+    private LocalDateTime updatedOn;
 
     public Builder id(Long id) {
       this.id = id;
@@ -75,11 +79,10 @@ public class Cat extends AbstractEntity implements Animal {
     }
 
     public Cat build() {
-      var cat = new Cat();
-      cat.setId(this.id);
-      cat.setName(this.name);
-      cat.setAge(this.age);
-      return cat;
+      return new Cat()
+          .setId(this.id)
+          .setName(this.name)
+          .setAge(this.age);
     }
   }
 

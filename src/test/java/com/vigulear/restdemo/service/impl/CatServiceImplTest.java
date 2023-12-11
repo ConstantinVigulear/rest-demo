@@ -96,6 +96,6 @@ class CatServiceImplTest {
     when(catRepository.findById(id)).thenReturn(Optional.empty());
     assertThatThrownBy(() -> catService.deleteById(id))
         .isInstanceOf(InvalidValueException.class)
-        .hasMessage("There is no cat with id = \"" + id + "\"");
+        .hasMessage("There is no cat with id = " + id);
   }
 }

@@ -10,7 +10,7 @@ import org.hibernate.annotations.CreationTimestamp;
  */
 @SuppressWarnings("unused")
 @MappedSuperclass
-public abstract class AbstractEntity {
+public abstract class AbstractEntity <T>{
   @Id
   @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "idGenerator")
   @SequenceGenerator(name = "idGenerator", initialValue = 1001)
@@ -20,37 +20,41 @@ public abstract class AbstractEntity {
   @CreationTimestamp
   private LocalDateTime createdOn;
   @CreationTimestamp
-  private LocalDateTime updateOn;
+  private LocalDateTime updatedOn;
 
   public Long getId() {
     return id;
   }
 
-  public void setId(Long id) {
+  public T setId(Long id) {
     this.id = id;
+    return (T)this;
   }
 
   public Integer getVersion() {
     return version;
   }
 
-  public void setVersion(Integer version) {
+  public T setVersion(Integer version) {
     this.version = version;
+    return (T)this;
   }
 
   public LocalDateTime getCreatedOn() {
     return createdOn;
   }
 
-  public void setCreatedOn(LocalDateTime createdOn) {
+  public T setCreatedOn(LocalDateTime createdOn) {
     this.createdOn = createdOn;
+    return (T)this;
   }
 
-  public LocalDateTime getUpdateOn() {
-    return updateOn;
+  public LocalDateTime getUpdatedOn() {
+    return updatedOn;
   }
 
-  public void setUpdateOn(LocalDateTime updateOn) {
-    this.updateOn = updateOn;
+  public T setUpdatedOn(LocalDateTime updateOn) {
+    this.updatedOn = updateOn;
+    return (T)this;
   }
 }
