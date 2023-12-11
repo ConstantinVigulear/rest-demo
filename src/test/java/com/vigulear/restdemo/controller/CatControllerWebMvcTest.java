@@ -16,7 +16,6 @@ import com.vigulear.restdemo.mapper.CatMapper;
 import com.vigulear.restdemo.service.CatService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -339,10 +338,9 @@ class CatControllerWebMvcTest {
   }
 
   @Test
-  @DisplayName("DELETE /cat/delete/{id} with valid id returns deleted catDto and Http 200 Ok")
+  @DisplayName("DELETE /cat/delete/{id} with valid id returns Http 204 No Content")
   void deleteById_validId_returnsDeletedCatDto() throws Exception {
     var catToDelete = Cat.builder().id(1L).build();
-    var catToDeleteDto = CatMapper.mapToCatDto(catToDelete);
 
     doNothing().when(catService).deleteById(catToDelete.getId());
 
