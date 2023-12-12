@@ -1,9 +1,7 @@
 package com.vigulear.restdemo.entity;
 
 import jakarta.persistence.Entity;
-import jakarta.validation.constraints.NotEmpty;
 
-import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**

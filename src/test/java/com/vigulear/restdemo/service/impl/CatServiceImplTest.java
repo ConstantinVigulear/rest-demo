@@ -9,7 +9,6 @@ import java.util.Optional;
 
 import com.vigulear.restdemo.dto.CatDto;
 import com.vigulear.restdemo.entity.Cat;
-import com.vigulear.restdemo.exceptions.InvalidValueException;
 import com.vigulear.restdemo.exceptions.NotFoundException;
 import com.vigulear.restdemo.mapper.CatMapper;
 import com.vigulear.restdemo.repository.CatRepository;

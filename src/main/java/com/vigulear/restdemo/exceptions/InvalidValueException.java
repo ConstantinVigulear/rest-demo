@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * @author : crme059
  * @created : 07-Dec-23, Thursday
  */
+@SuppressWarnings("unused")
 @ResponseStatus(value = HttpStatus.BAD_REQUEST, reason = "Invalid value")
 public class InvalidValueException extends Exception {
     public InvalidValueException() {

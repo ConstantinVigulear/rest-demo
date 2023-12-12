@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * @created : 12-Dec-23, Tuesday
  */
 
+@SuppressWarnings("unused")
 @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Value not found")
 public class NotFoundException extends RuntimeException {
     public NotFoundException() {

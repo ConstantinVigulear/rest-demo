@@ -13,7 +13,6 @@ import com.vigulear.restdemo.repository.CatRepository;
 import com.vigulear.restdemo.service.CatService;
 import com.vigulear.restdemo.util.FieldUtility;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import static com.vigulear.restdemo.mapper.CatMapper.mapToCatDto;
@@ -66,9 +65,8 @@ public class CatServiceImpl implements CatService {
     if (FieldUtility.isFieldValid(field)) {
       Sort sort = Sort.by(fieldName).ascending();
       List<Cat> cats = catRepository.findFirst3By(sort);
-      List<CatDto> catDtos = cats.stream().map(CatMapper::mapToCatDto).collect(Collectors.toList());
 
-      return catDtos;
+      return cats.stream().map(CatMapper::mapToCatDto).collect(Collectors.toList());
     } else {
       throw new InvalidValueException("No such field as '" + fieldName + "'");
     }
