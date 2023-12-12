@@ -1,16 +1,19 @@
 package com.vigulear.restdemo.service.impl;
 
-import java.time.LocalDateTime;
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.vigulear.restdemo.dto.CatDto;
 import com.vigulear.restdemo.entity.Cat;
 import com.vigulear.restdemo.exceptions.InvalidValueException;
+import com.vigulear.restdemo.exceptions.NotFoundException;
 import com.vigulear.restdemo.mapper.CatMapper;
 import com.vigulear.restdemo.repository.CatRepository;
 import com.vigulear.restdemo.service.CatService;
+import com.vigulear.restdemo.util.FieldUtility;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import static com.vigulear.restdemo.mapper.CatMapper.mapToCatDto;
@@ -30,9 +33,8 @@ public class CatServiceImpl implements CatService {
 
   @Override
   public CatDto findById(Long id) {
-    var cat = catRepository.findById(id).orElse(null);
-    assert cat != null;
-    return mapToCatDto(cat);
+    var cat = catRepository.findById(id).orElseThrow(NotFoundException::new);
+    return CatMapper.mapToCatDto(cat);
   }
 
   @Override
@@ -42,26 +44,53 @@ public class CatServiceImpl implements CatService {
   }
 
   @Override
-  public List<CatDto> findTopByField(Integer quantity, String fieldName) {
-    var cats = catRepository.findTopByField(quantity, fieldName);
-    return cats.stream().map(CatMapper::mapToCatDto).collect(Collectors.toList());
+  public List<CatDto> findTopByField(Integer quantity, String fieldName)
+      throws InvalidValueException {
+
+    if (quantity <= 0)
+      throw new InvalidValueException("Invalid value \"" + quantity + "\" for parameter \"top\"");
+
+    Field field = FieldUtility.getCriteriaFieldForClass(fieldName, Cat.class);
+
+    if (FieldUtility.isFieldValid(field)) {
+      List<Cat> queriedCats = catRepository.findTopByField(quantity, fieldName);
+      return queriedCats.stream().map(CatMapper::mapToCatDto).collect(Collectors.toList());
+    } else {
+      throw new InvalidValueException("No such field as '" + fieldName + "'");
+    }
   }
 
   @Override
-  public List<CatDto> findFirst3(Sort sort) {
-    var cats = catRepository.findFirst3By(sort);
-    return cats.stream().map(CatMapper::mapToCatDto).collect(Collectors.toList());
+  public List<CatDto> findFirst3(String fieldName) throws InvalidValueException {
+    Field field = FieldUtility.getCriteriaFieldForClass(fieldName, Cat.class);
+    if (FieldUtility.isFieldValid(field)) {
+      Sort sort = Sort.by(fieldName).ascending();
+      List<Cat> cats = catRepository.findFirst3By(sort);
+      List<CatDto> catDtos = cats.stream().map(CatMapper::mapToCatDto).collect(Collectors.toList());
+
+      return catDtos;
+    } else {
+      throw new InvalidValueException("No such field as '" + fieldName + "'");
+    }
   }
 
   @Override
   public CatDto findFirstByOrderByAge() {
-    var cat = catRepository.findFirstByOrderByAge();
+    var cat = catRepository.findFirstByOrderByAge().orElseThrow(NotFoundException::new);
     return mapToCatDto(cat);
   }
 
   @Override
-  public Integer findTotalBy(String fieldName) {
-    return catRepository.findTotalBy(fieldName);
+  public Integer findTotalBy(String fieldName) throws InvalidValueException {
+    Field field = FieldUtility.getCriteriaFieldForClass(fieldName, Cat.class);
+    boolean isFieldValidForTotal =
+        FieldUtility.isFieldValid(field) && FieldUtility.isFieldCountable(field);
+
+    if (isFieldValidForTotal) {
+      return catRepository.findTotalBy(fieldName);
+    } else {
+      throw new InvalidValueException("No such field as '" + fieldName + "'");
+    }
   }
 
   @Override
@@ -77,31 +106,35 @@ public class CatServiceImpl implements CatService {
   }
 
   @Override
-  public void deleteById(Long id) throws InvalidValueException {
-    Cat catToDelete = catRepository.findById(id).orElse(null);
-
-    if (catToDelete == null) {
-      throw new InvalidValueException("There is no cat with id = " + id);
-    }
-    catRepository.deleteById(catToDelete.getId());
+  public void deleteById(Long id) {
+    catRepository
+        .findById(id)
+        .ifPresent(catToDelete -> catRepository.deleteById(catToDelete.getId()));
   }
 
   @Override
-  public CatDto updateById(Long id, Cat cat) throws InvalidValueException {
+  public CatDto updateById(Long id, Cat cat) {
+    Cat catById = catRepository.findById(id).orElseThrow(NotFoundException::new);
+
+    catById.setName(cat.getName());
+    catById.setAge(cat.getAge());
+    return CatMapper.mapToCatDto(catRepository.save(catById));
+  }
+
+  @Override
+  public void patchById(Long id, Cat cat) {
     Cat catById = catRepository.findById(id).orElse(null);
 
-    if (catById != null ) {
-      catById
-              .setId(cat.getId() != null ? cat.getId() : catById.getId())
-              .setName(cat.getName() != null ? cat.getName() : catById.getName())
-              .setAge(cat.getAge() != null ? cat.getAge() : catById.getAge())
-              .setVersion(cat.getVersion() != null ? cat.getVersion() + 1 : catById.getVersion() + 1)
-              .setCreatedOn(cat.getCreatedOn() != null ? cat.getCreatedOn() : catById.getCreatedOn())
-              .setUpdatedOn(LocalDateTime.now());
+    if (catById != null) {
+
+      if (cat.getName() != null) {
+        catById.setName(cat.getName());
+      }
+
+      if (cat.getAge() != null) {
+        catById.setAge(cat.getAge());
+      }
+      catRepository.save(catById);
     }
-
-    else throw new InvalidValueException("There is no cat with id = " + id);
-
-    return CatMapper.mapToCatDto(catRepository.save(catById));
   }
 }

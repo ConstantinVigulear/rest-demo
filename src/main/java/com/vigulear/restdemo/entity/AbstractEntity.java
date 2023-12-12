@@ -3,6 +3,7 @@ package com.vigulear.restdemo.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 /**
  * @author : crme059
@@ -19,7 +20,7 @@ public abstract class AbstractEntity <T>{
   private Integer version = 1;
   @CreationTimestamp
   private LocalDateTime createdOn;
-  @CreationTimestamp
+  @UpdateTimestamp
   private LocalDateTime updatedOn;
 
   public Long getId() {

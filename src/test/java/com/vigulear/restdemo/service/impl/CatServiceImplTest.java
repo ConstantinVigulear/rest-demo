@@ -10,10 +10,13 @@ import java.util.Optional;
 import com.vigulear.restdemo.dto.CatDto;
 import com.vigulear.restdemo.entity.Cat;
 import com.vigulear.restdemo.exceptions.InvalidValueException;
+import com.vigulear.restdemo.exceptions.NotFoundException;
 import com.vigulear.restdemo.mapper.CatMapper;
 import com.vigulear.restdemo.repository.CatRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -28,6 +31,9 @@ class CatServiceImplTest {
   @Mock private CatRepository catRepository;
 
   @InjectMocks private CatServiceImpl catService;
+
+  @Captor
+  ArgumentCaptor<Long> longArgumentCaptor;
 
   @Test
   void findById_validPayload_returnValidCatDto() {
@@ -80,21 +86,25 @@ class CatServiceImplTest {
   }
 
   @Test
-  void deleteById_validId_returnDeletedCatDto() throws InvalidValueException {
+  void deleteById_validId_returnDeletedCatDto() {
     Cat catToDelete = Cat.builder().id(1L).name("Humus").age(1).build();
     when(catRepository.findById(catToDelete.getId())).thenReturn(Optional.of(catToDelete));
 
     catService.deleteById(catToDelete.getId());
 
-    verify(catRepository, times(1)).deleteById(catToDelete.getId());
+    verify(catRepository, times(1)).deleteById(longArgumentCaptor.capture());
+
+    assertThat(catToDelete.getId()).isEqualTo(longArgumentCaptor.getValue());
   }
 
   @Test
-  void deleteById_validId_throwsInvalidValueException() {
-    Long id = 1001L;
-    when(catRepository.findById(id)).thenReturn(Optional.empty());
+  void deleteById_validId_throwsNotFoundException() {
+    Long id = 1L;
+    doThrow(new NotFoundException("There is no cat with id = " + id)).when(catRepository).findById(id);
+
     assertThatThrownBy(() -> catService.deleteById(id))
-        .isInstanceOf(InvalidValueException.class)
+        .isInstanceOf(NotFoundException.class)
         .hasMessage("There is no cat with id = " + id);
+
   }
 }

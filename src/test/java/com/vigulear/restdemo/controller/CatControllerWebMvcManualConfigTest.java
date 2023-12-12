@@ -1,5 +1,6 @@
 package com.vigulear.restdemo.controller;
 
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -15,7 +16,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -33,8 +37,11 @@ class CatControllerWebMvcManualConfigTest {
 
   private ObjectMapper objectMapper;
 
+  String CAT_PATH;
+
   @BeforeEach
   void setUp() {
+    // throws error because spring cannot standaloneSetup(controller) without loading from application.properties
     mockMvc = MockMvcBuilders.standaloneSetup(catController).build();
     objectMapper = new ObjectMapper();
   }
@@ -48,15 +55,23 @@ class CatControllerWebMvcManualConfigTest {
 
     when(catService.createCat(cat)).thenReturn(catDto);
 
+
+    //    when(catService.createCat(cat)).thenReturn(catDto);
+    given(catService.createCat(cat)).willReturn(catDto);
+
     mockMvc
-        .perform(post("/cat/create").contentType(MediaType.APPLICATION_JSON).content(catJson))
-        .andExpectAll(
-            status().isCreated(),
-            content().contentType(MediaType.APPLICATION_JSON),
-            content().json(catDtoJson),
-            jsonPath("$.id").value(cat.getId()),
-            jsonPath("$.name").value(cat.getName()),
-            jsonPath("$.age").value(cat.getAge()));
+            .perform(
+                    post(CAT_PATH)
+                            .accept(MediaType.APPLICATION_JSON)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(catJson))
+            .andExpectAll(
+                    status().isCreated(),
+                    content().contentType(MediaType.APPLICATION_JSON),
+                    content().json(catDtoJson),
+                    jsonPath("$.id").value(cat.getId()),
+                    jsonPath("$.name").value(cat.getName()),
+                    jsonPath("$.age").value(cat.getAge()));
 
     verify(catService, times(1)).createCat(any());
   }

@@ -4,16 +4,13 @@ import com.vigulear.restdemo.dto.CatDto;
 import com.vigulear.restdemo.entity.Cat;
 import com.vigulear.restdemo.exceptions.InvalidValueException;
 import com.vigulear.restdemo.service.CatService;
-import com.vigulear.restdemo.util.FieldUtility;
 import lombok.Data;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.lang.reflect.Field;
 import java.util.List;
 
 /**
@@ -22,7 +19,6 @@ import java.util.List;
  */
 @Data
 @RestController
-@RequestMapping("/cat")
 public class CatController {
 
   private final CatService catService;
@@ -31,26 +27,35 @@ public class CatController {
     this.catService = catService;
   }
 
-  @PostMapping("/create")
+  @PostMapping("${cat.property.cat-path}")
   public ResponseEntity<CatDto> createCat(@RequestBody Cat cat) {
     CatDto savedCatDto = catService.createCat(cat);
 
     HttpHeaders httpHeaders = new HttpHeaders();
     httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-    httpHeaders.add("Location", "/cat/findById/" + savedCatDto.getId().toString());
+    httpHeaders.add("Location", "${cat.property.cat-path}" + savedCatDto.getId().toString());
 
     return new ResponseEntity<>(savedCatDto, httpHeaders, HttpStatus.CREATED);
   }
 
-  @PutMapping("/update/{id}")
-  public ResponseEntity<CatDto> updateById(@PathVariable("id") Long id, @RequestBody Cat cat)
+  @PutMapping("${cat.property.cat-path-id}")
+  public ResponseEntity<CatDto> updateById(@PathVariable("catId") Long id, @RequestBody Cat cat)
       throws InvalidValueException {
     CatDto updatedCatDto = catService.updateById(id, cat);
 
     return new ResponseEntity<>(updatedCatDto, HttpStatus.OK);
   }
 
-  @GetMapping("")
+  // In summary, PATCH is more suitable for partial updates, while PUT (or UPDATE) is used for
+  // complete replacements or creations of a resource.
+  @PatchMapping("${cat.property.cat-path-id}")
+  public ResponseEntity<?> patchById(@PathVariable("catId") Long id, @RequestBody Cat cat)
+      throws InvalidValueException {
+    catService.patchById(id, cat);
+    return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+  }
+
+  @GetMapping("${cat.property.cat-path}")
   public ResponseEntity<List<CatDto>> getAllCats() {
     List<CatDto> cats = catService.findAll();
     HttpHeaders httpHeaders = new HttpHeaders();
@@ -58,79 +63,42 @@ public class CatController {
     return new ResponseEntity<>(cats, httpHeaders, HttpStatus.OK);
   }
 
-  @GetMapping("{id}")
-  public ResponseEntity<CatDto> getCatById(@PathVariable("id") Long id) throws Exception {
+  @GetMapping("${cat.property.cat-path-id}")
+  public ResponseEntity<CatDto> getCatById(@PathVariable("catId") Long id) {
     CatDto cat = catService.findById(id);
-
-    if (cat == null) {
-      throw new InvalidValueException("Cat with id = '" + id + "' is not found");
-    }
 
     return new ResponseEntity<>(cat, HttpStatus.OK);
   }
 
-  /*
-  http://localhost:8080/cats/?top=2&fieldName=name
-   */
-  @GetMapping("/")
+  @GetMapping("${cat.property.cat-path}" + "/top")
   public ResponseEntity<List<CatDto>> getTopByField(
       @RequestParam("top") Integer quantity, @RequestParam("fieldName") String fieldName)
-      throws Exception {
+      throws InvalidValueException {
 
-    if (quantity <= 0)
-      throw new InvalidValueException("Invalid value \"" + quantity + "\" for parameter \"top\"");
-
-    Field field = FieldUtility.getCriteriaFieldForClass(fieldName, Cat.class);
-
-    if (FieldUtility.isFieldValid(field)) {
-      List<CatDto> queriedCats = catService.findTopByField(quantity, fieldName);
-      return ResponseEntity.ok(queriedCats);
-    } else {
-      throw new InvalidValueException("No such field as '" + fieldName + "'");
-    }
+    List<CatDto> queriedCats = catService.findTopByField(quantity, fieldName);
+    return ResponseEntity.ok(queriedCats);
   }
 
-  /*
-  http://localhost:8080/cats/top3?fieldName=age
-   */
-  @GetMapping("/top3")
+  @GetMapping("${cat.property.cat-path}" + "/top3")
   public ResponseEntity<List<CatDto>> getTopThree(@RequestParam("fieldName") String fieldName)
       throws Exception {
-    Field field = FieldUtility.getCriteriaFieldForClass(fieldName, Cat.class);
-    if (FieldUtility.isFieldValid(field)) {
-      Sort sort = Sort.by(fieldName).ascending();
-      return ResponseEntity.ok(catService.findFirst3(sort));
-    } else {
-      throw new InvalidValueException("No such field as '" + fieldName + "'");
-    }
+    return ResponseEntity.ok(catService.findFirst3(fieldName));
   }
 
-  @GetMapping("/youngest")
-  public ResponseEntity<CatDto> findTheYoungest() throws Exception {
+  @GetMapping("${cat.property.cat-path}" + "/youngest")
+  public ResponseEntity<CatDto> findTheYoungest() {
     CatDto youngestCat = catService.findFirstByOrderByAge();
-
-    if (youngestCat != null) return ResponseEntity.ok(youngestCat);
-    else {
-      throw new InvalidValueException("There are no records in data base");
-    }
+    return ResponseEntity.ok(youngestCat);
   }
 
-  @GetMapping("/total")
-  public ResponseEntity<Integer> findTotalBy(@RequestParam("fieldName") String fieldName)
-      throws Exception {
-    Field field = FieldUtility.getCriteriaFieldForClass(fieldName, Cat.class);
-    boolean isFieldValidForTotal =
-        FieldUtility.isFieldValid(field) && FieldUtility.isFieldCountable(field);
+  @GetMapping("${cat.property.cat-path}" + "/total")
+  public ResponseEntity<Integer> findTotalBy(@RequestParam String fieldName) throws Exception {
 
-    if (isFieldValidForTotal) {
-      return ResponseEntity.ok(catService.findTotalBy(fieldName));
-    } else {
-      throw new InvalidValueException("No such field as '" + fieldName + "'");
-    }
+    return ResponseEntity.ok(catService.findTotalBy(fieldName));
   }
 
-  @DeleteMapping("/delete/{id}")
-  public ResponseEntity<?> deleteById(@PathVariable Long id) throws InvalidValueException {
+  @DeleteMapping("${cat.property.cat-path-id}")
+  public ResponseEntity<?> deleteById(@PathVariable("catId") Long id) throws InvalidValueException {
     catService.deleteById(id);
     return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
   }

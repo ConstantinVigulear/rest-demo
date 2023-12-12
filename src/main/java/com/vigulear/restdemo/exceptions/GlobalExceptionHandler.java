@@ -41,4 +41,13 @@ public class GlobalExceptionHandler {
     exception.printStackTrace();
     return new ResponseEntity<>("Unrecognized token for parameter", HttpStatus.BAD_REQUEST);
   }
+
+  @ExceptionHandler
+  public ResponseEntity<String> handleNotFoundException (
+          NotFoundException exception
+  ) {
+    log.error("Bad request error: {}", exception.toString());
+    exception.printStackTrace();
+    return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
+  }
 }

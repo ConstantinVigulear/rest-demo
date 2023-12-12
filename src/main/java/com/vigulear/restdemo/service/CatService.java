@@ -6,21 +6,32 @@ import com.vigulear.restdemo.exceptions.InvalidValueException;
 import org.springframework.data.domain.Sort;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author : crme059
  * @created : 30-Nov-23, Thursday
  */
 public interface CatService {
-    CatDto findById(Long id);
-    List<CatDto> findAll();
-    List<CatDto> findTopByField(Integer quantity, String fieldName);
-    List<CatDto> findFirst3(Sort sort);
-    CatDto findFirstByOrderByAge();
-    Integer findTotalBy(String fieldName);
-    CatDto createCat(Cat cat);
-    List<CatDto> createAllCats(List<Cat> cats);
-    void deleteById(Long id) throws InvalidValueException;
+  CatDto findById(Long id);
 
-    CatDto updateById(Long id, Cat cat) throws InvalidValueException;
+  List<CatDto> findAll();
+
+  List<CatDto> findTopByField(Integer quantity, String fieldName) throws InvalidValueException;
+
+  List<CatDto> findFirst3(String fieldName) throws InvalidValueException;
+
+  CatDto findFirstByOrderByAge();
+
+  Integer findTotalBy(String fieldName) throws InvalidValueException;
+
+  CatDto createCat(Cat cat);
+
+  List<CatDto> createAllCats(List<Cat> cats);
+
+  void deleteById(Long id) throws InvalidValueException;
+
+  CatDto updateById(Long id, Cat cat) throws InvalidValueException;
+
+  void patchById(Long id, Cat cat) throws InvalidValueException;
 }

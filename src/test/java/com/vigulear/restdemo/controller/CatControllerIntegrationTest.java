@@ -6,6 +6,7 @@ import com.vigulear.restdemo.dto.CatDto;
 import com.vigulear.restdemo.entity.Cat;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -28,13 +29,26 @@ class CatControllerIntegrationTest {
   @Autowired MockMvc mockMvc;
   @Autowired ObjectMapper objectMapper;
 
+  @Value("${cat.property.cat-path}")
+  String CAT_PATH;
+  @Value("${cat.property.cat-path-id}")
+  String CAT_PATH_ID;
+  @Value("${cat.property.cat-path}" + "/total?fieldName={fieldName}")
+  String CAT_PATH_TOTAL;
+  @Value("${cat.property.cat-path}" + "/youngest")
+  String CAT_PATH_YOUNGEST;
+  @Value("${cat.property.cat-path}" + "/top?top={top}&fieldName={fieldName}")
+  String CAT_PATH_TOP = CAT_PATH;
+  @Value("${cat.property.cat-path}" + "/top3?fieldName={fieldName}")
+  String CAT_PATH_TOP3;
+
   @Test
   void createCat() throws Exception {
     Cat cat = Cat.builder().name("Napoleon").age(11).build();
     String catJson = objectMapper.writeValueAsString(cat);
 
     mockMvc
-        .perform(post("/cat/create").contentType(MediaType.APPLICATION_JSON).content(catJson))
+        .perform(post(CAT_PATH).contentType(MediaType.APPLICATION_JSON).content(catJson))
         .andExpectAll(
             status().isCreated(),
             content().contentType(MediaType.APPLICATION_JSON),
@@ -46,7 +60,7 @@ class CatControllerIntegrationTest {
   void getAllCats() throws Exception {
     String answer =
         mockMvc
-            .perform(get("/cat"))
+            .perform(get(CAT_PATH))
             .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
             .andReturn()
             .getResponse()
@@ -62,7 +76,7 @@ class CatControllerIntegrationTest {
     Long id = 1001L;
 
     mockMvc
-        .perform(get("/cat/{id}", id))
+        .perform(get(CAT_PATH_ID, id))
         .andExpectAll(
             status().isOk(),
             content().contentType(MediaType.APPLICATION_JSON),
@@ -79,7 +93,7 @@ class CatControllerIntegrationTest {
 
     String response =
         mockMvc
-            .perform(get("/cat/?top={top}&fieldName={fieldName}", quantity, fieldName))
+            .perform(get(CAT_PATH_TOP, quantity, fieldName))
             .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
             .andReturn()
             .getResponse()
@@ -100,7 +114,7 @@ class CatControllerIntegrationTest {
 
     String response =
         mockMvc
-            .perform(get("/cat/top3?fieldName={fieldName}", fieldName))
+            .perform(get(CAT_PATH_TOP3, fieldName))
             .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
             .andReturn()
             .getResponse()
@@ -121,7 +135,7 @@ class CatControllerIntegrationTest {
 
     String response =
         mockMvc
-            .perform(get("/cat/youngest"))
+            .perform(get(CAT_PATH_YOUNGEST))
             .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
             .andReturn()
             .getResponse()
@@ -137,7 +151,7 @@ class CatControllerIntegrationTest {
     String fieldName = "age";
     String response =
         mockMvc
-            .perform(get("/cat/total?fieldName={fieldName}", fieldName))
+            .perform(get(CAT_PATH_TOTAL, fieldName))
             .andExpectAll(status().isOk(), content().contentType(MediaType.APPLICATION_JSON))
             .andReturn()
             .getResponse()

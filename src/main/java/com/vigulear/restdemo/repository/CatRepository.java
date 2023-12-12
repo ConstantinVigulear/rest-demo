@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author : crme059
@@ -26,7 +27,7 @@ public interface CatRepository extends JpaRepository<Cat, Long> {
 
   List<Cat> findFirst3By(Sort sort);
 
-  Cat findFirstByOrderByAge();
+  Optional<Cat> findFirstByOrderByAge();
 
   @Query(
       "SELECT SUM(CASE WHEN :fieldName = 'age' THEN c.age "

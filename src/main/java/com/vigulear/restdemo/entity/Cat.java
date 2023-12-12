@@ -13,9 +13,9 @@ import java.util.Objects;
 @Entity
 public class Cat extends AbstractEntity<Cat> implements Animal {
 
-  @NotEmpty private String name = "";
+  private String name;
 
-  @NotEmpty private Integer age = 0;
+  private Integer age;
 
   protected Cat() {}
 
@@ -59,6 +59,20 @@ public class Cat extends AbstractEntity<Cat> implements Animal {
     private Long id;
     private String name;
     private Integer age;
+//    private Integer version;
+//    private LocalDateTime createdOn;
+//    private LocalDateTime updatedOn;
+
+    public Builder() {}
+
+//    public Builder(Cat cat) {
+//      this.id = cat.getId();
+//      this.name = cat.getName();
+//      this.age = cat.getAge();
+//      this.version = cat.getVersion();
+//      this.createdOn = cat.getCreatedOn();
+//      this.updatedOn = cat.getUpdatedOn();
+//    }
 
     public Builder id(Long id) {
       this.id = id;
@@ -80,10 +94,17 @@ public class Cat extends AbstractEntity<Cat> implements Animal {
           .setId(this.id)
           .setName(this.name)
           .setAge(this.age);
+//          .setVersion(1)
+//          .setCreatedOn(LocalDateTime.now())
+//          .setUpdatedOn(LocalDateTime.now());
     }
   }
 
   public static Builder builder() {
     return new Builder();
   }
+
+//  public static Builder builder(Cat cat) {
+//    return new Builder(cat);
+//  }
 }
