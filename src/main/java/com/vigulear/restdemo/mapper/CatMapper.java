@@ -1,23 +1,17 @@
 package com.vigulear.restdemo.mapper;
 
-import com.vigulear.restdemo.dto.CatDto;
+import com.vigulear.restdemo.dto.CatDTO;
 import com.vigulear.restdemo.entity.Cat;
+import org.mapstruct.Mapper;
 
 /**
  * @author : crme059
  * @created : 05-Dec-23, Tuesday
  */
-public class CatMapper {
-  public static CatDto mapToCatDto(Cat cat) {
-    if (cat == null) return null;
-    else
-      return CatDto.builder()
-          .id(cat.getId())
-          .name(cat.getName())
-          .age(cat.getAge())
-          .version(cat.getVersion())
-          .createdOn(cat.getCreatedOn())
-          .updateOn(cat.getUpdatedOn())
-          .build();
-  }
+@Mapper
+public interface CatMapper {
+
+  Cat catDtoToCat(CatDTO dto);
+
+  CatDTO catToCatDto(Cat cat);
 }

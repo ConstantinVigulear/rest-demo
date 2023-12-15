@@ -2,7 +2,9 @@ package com.vigulear.restdemo.bootstrap;
 
 import java.util.List;
 
+import com.vigulear.restdemo.dto.CatDTO;
 import com.vigulear.restdemo.entity.Cat;
+import com.vigulear.restdemo.mapper.CatMapper;
 import com.vigulear.restdemo.service.CatService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -15,16 +17,18 @@ import org.springframework.stereotype.Component;
 public class DataLoader implements CommandLineRunner {
 
   private final CatService service;
+  private final CatMapper catMapper;
 
-  public DataLoader(CatService service) {
+  public DataLoader(CatService service, CatMapper catMapper) {
     this.service = service;
+      this.catMapper = catMapper;
   }
 
   @Override
   public void run(String... args) {
     List<Cat> cats =
         List.of(
-            Cat.builder().name("Georges").age(1).build(),
+            Cat.builder().name("Millefoglie").age(1).build(),
             Cat.builder().name("Couscous").age(0).build(),
             Cat.builder().name("Tiramisu").age(7).build(),
             Cat.builder().name("Object").age(3).build(),
@@ -36,6 +40,8 @@ public class DataLoader implements CommandLineRunner {
             Cat.builder().name("Finland").age(15).build(),
             Cat.builder().name("Robert").age(13).build());
 
-    service.createAllCats(cats);
+    List<CatDTO> catDTOs = cats.stream().map(catMapper::catToCatDto).toList();
+
+    service.createAllCats(catDTOs);
   }
 }

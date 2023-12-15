@@ -1,19 +1,31 @@
 package com.vigulear.restdemo.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * @author : crme059
  * @created : 30-Nov-23, Thursday
  */
+@SuppressWarnings("LombokGetterMayBeUsed")
 @Entity
 public class Cat extends AbstractEntity<Cat> implements Animal {
 
+  @NotNull
+  @NotBlank
+  @Size(max = 50)
+  @Column(length = 50)
   private String name;
 
-  private Integer age;
+  @NotNull @PositiveOrZero private Integer age;
 
   protected Cat() {}
 
@@ -54,25 +66,16 @@ public class Cat extends AbstractEntity<Cat> implements Animal {
   }
 
   public static class Builder {
-    private Long id;
+    private UUID id;
     private String name;
     private Integer age;
-//    private Integer version;
-//    private LocalDateTime createdOn;
-//    private LocalDateTime updatedOn;
+    private Integer version;
+    private LocalDateTime createdOn;
+    private LocalDateTime updatedOn;
 
     public Builder() {}
 
-//    public Builder(Cat cat) {
-//      this.id = cat.getId();
-//      this.name = cat.getName();
-//      this.age = cat.getAge();
-//      this.version = cat.getVersion();
-//      this.createdOn = cat.getCreatedOn();
-//      this.updatedOn = cat.getUpdatedOn();
-//    }
-
-    public Builder id(Long id) {
+    public Builder id(UUID id) {
       this.id = id;
       return this;
     }
@@ -87,22 +90,33 @@ public class Cat extends AbstractEntity<Cat> implements Animal {
       return this;
     }
 
+    public Builder version(Integer version) {
+      this.version = version;
+      return this;
+    }
+
+    public Builder createdOn(LocalDateTime createdOn) {
+      this.createdOn = createdOn;
+      return this;
+    }
+
+    public Builder updatedOn(LocalDateTime updatedOn) {
+      this.updatedOn = updatedOn;
+      return this;
+    }
+
     public Cat build() {
       return new Cat()
           .setId(this.id)
           .setName(this.name)
-          .setAge(this.age);
-//          .setVersion(1)
-//          .setCreatedOn(LocalDateTime.now())
-//          .setUpdatedOn(LocalDateTime.now());
+          .setAge(this.age)
+          .setVersion(this.version)
+          .setCreatedOn(this.createdOn)
+          .setUpdatedOn(this.updatedOn);
     }
   }
 
   public static Builder builder() {
     return new Builder();
   }
-
-//  public static Builder builder(Cat cat) {
-//    return new Builder(cat);
-//  }
 }

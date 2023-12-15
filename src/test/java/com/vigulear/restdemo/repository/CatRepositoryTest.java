@@ -1,11 +1,14 @@
 package com.vigulear.restdemo.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import com.vigulear.restdemo.dto.CatDTO;
 import com.vigulear.restdemo.entity.Cat;
+import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +21,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
  * @created : 01-Dec-23, Friday
  */
 @DataJpaTest
-@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) // This works by default
 class CatRepositoryTest {
 
   @Autowired CatRepository catRepository;
@@ -44,7 +46,34 @@ class CatRepositoryTest {
   }
 
   @Test
-  void findTopByField_validPayload_returnValidCats() {
+  void save_returnValidCatDto() {
+    var catNew = Cat.builder().name("Neko").age(11).build();
+
+    var catSaved = catRepository.save(catNew);
+
+    catRepository.flush();
+
+    assertThat(catSaved).isNotNull();
+    assertThat(catSaved.getId()).isNotNull();
+  }
+
+  @Test
+  void save_nameTooLong() {
+    Cat catNew =
+        Cat.builder()
+            .name("Neko01234567890123456789012345678901234567890123456789")
+            .age(11)
+            .build();
+    assertThatThrownBy(
+            () -> {
+              catRepository.save(catNew);
+              catRepository.flush();
+            })
+        .isInstanceOf(ConstraintViolationException.class);
+  }
+
+  @Test
+  void findTopByField_validQuantityAndFieldName_returnValidCats() {
     Integer quantity = 2;
     String fieldName = "age";
 

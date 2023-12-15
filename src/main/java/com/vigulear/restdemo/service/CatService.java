@@ -1,35 +1,35 @@
 package com.vigulear.restdemo.service;
 
-import com.vigulear.restdemo.dto.CatDto;
-import com.vigulear.restdemo.entity.Cat;
-import com.vigulear.restdemo.exceptions.InvalidValueException;
+import com.vigulear.restdemo.dto.CatDTO;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * @author : crme059
  * @created : 30-Nov-23, Thursday
  */
 public interface CatService {
-  CatDto findById(Long id);
+  Optional<CatDTO> findById(UUID id);
 
-  List<CatDto> findAll();
+  List<CatDTO> findAll();
 
-  List<CatDto> findTopByField(Integer quantity, String fieldName) throws InvalidValueException;
+  List<CatDTO> findTopByField(Integer quantity, String fieldName);
 
-  List<CatDto> findFirst3(String fieldName) throws InvalidValueException;
+  List<CatDTO> findFirst3(String fieldName);
 
-  CatDto findFirstByOrderByAge();
+  Optional<CatDTO> findFirstByOrderByAge();
 
-  Integer findTotalBy(String fieldName) throws InvalidValueException;
+  Integer findTotalBy(String fieldName);
 
-  CatDto createCat(Cat cat);
+  CatDTO createCat(CatDTO catDto);
 
-  List<CatDto> createAllCats(List<Cat> cats);
+  List<CatDTO> createAllCats(List<CatDTO> catDTOS);
 
-  void deleteById(Long id) throws InvalidValueException;
+  Boolean deleteById(UUID id) ;
 
-  CatDto updateById(Long id, Cat cat) throws InvalidValueException;
+  Optional<CatDTO> updateById(UUID id, CatDTO catDto) ;
 
-  void patchById(Long id, Cat cat) throws InvalidValueException;
+  Optional<CatDTO> patchById(UUID id, CatDTO catDto);
 }

@@ -1,9 +1,17 @@
 package com.vigulear.restdemo.entity;
 
 import jakarta.persistence.*;
+
+import java.math.BigInteger;
 import java.time.LocalDateTime;
+import java.util.UUID;
+
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.generator.Generator;
+import org.hibernate.id.UUIDGenerator;
 
 /**
  * @author : crme059
@@ -13,21 +21,23 @@ import org.hibernate.annotations.UpdateTimestamp;
 @MappedSuperclass
 public abstract class AbstractEntity <T>{
   @Id
-  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "idGenerator")
-  @SequenceGenerator(name = "idGenerator", initialValue = 1001)
-  private Long id;
-  @Version()
-  private Integer version = 1;
+  @GeneratedValue(generator = "idGenerator")
+  @GenericGenerator(name = "idGenerator", type = UUIDGenerator.class)
+  @Column(length = 36, columnDefinition = "varchar", updatable = false, nullable = false)
+  private UUID id;
+
+  @Version
+  private Integer version;
   @CreationTimestamp
   private LocalDateTime createdOn;
   @UpdateTimestamp
   private LocalDateTime updatedOn;
 
-  public Long getId() {
+  public UUID getId() {
     return id;
   }
 
-  public T setId(Long id) {
+  public T setId(UUID id) {
     this.id = id;
     return (T)this;
   }

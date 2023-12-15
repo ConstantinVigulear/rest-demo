@@ -8,12 +8,13 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * @author : crme059
  * @created : 30-Nov-23, Thursday
  */
-public interface CatRepository extends JpaRepository<Cat, Long> {
+public interface CatRepository extends JpaRepository<Cat, UUID> {
 
   @Query("""
           SELECT c
@@ -35,5 +36,4 @@ public interface CatRepository extends JpaRepository<Cat, Long> {
           + "ELSE 0 END) "
           + "FROM Cat c")
   Integer findTotalBy(@Param("fieldName") String fieldName);
-
 }
