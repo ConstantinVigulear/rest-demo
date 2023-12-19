@@ -1,4 +1,5 @@
 # rest-demo
+Mostly completed while studying "Spring Framework 6: Beginner to Guru"
 1. Using DataLoader extends CommandLineRunner to populate DB when app runs
 2. Splace (isolated) unit test for @Repository using @DataJpaTest and inmemory DB H2
 3. Unit test for @Service layer using @ExtendWith(MockitoExtension.class)
