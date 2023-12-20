@@ -1,6 +1,6 @@
 package com.vigulear.restdemo.mapper;
 
-import com.vigulear.restdemo.dto.CatDTO;
+import com.vigulear.restdemo.model.CatDTO;
 import com.vigulear.restdemo.entity.Cat;
 import org.mapstruct.Mapper;
 

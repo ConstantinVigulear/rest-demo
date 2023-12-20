@@ -1,12 +1,13 @@
 package com.vigulear.restdemo.controller;
 
-import com.vigulear.restdemo.dto.CatDTO;
+import com.vigulear.restdemo.model.CatDTO;
 import com.vigulear.restdemo.entity.Cat;
 import com.vigulear.restdemo.exceptions.InvalidValueException;
 import com.vigulear.restdemo.exceptions.NotFoundException;
 import com.vigulear.restdemo.service.CatService;
 import com.vigulear.restdemo.util.FieldUtility;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -63,36 +64,13 @@ public class CatController {
     return new ResponseEntity<>(cat, HttpStatus.OK);
   }
 
-  @PutMapping("${cat.property.cat-path-id}")
-  public ResponseEntity<CatDTO> updateById(
-      @PathVariable("catId") UUID id, @Validated @RequestBody CatDTO catDto) {
-    Optional<CatDTO> updatedCat = catService.updateById(id, catDto);
-
-    if (updatedCat.isEmpty()) {
-      throw new NotFoundException(String.format(NOT_FOUND, id));
-    }
-
-    return new ResponseEntity<>(updatedCat.get(), HttpStatus.OK);
-  }
-
-  @PatchMapping("${cat.property.cat-path-id}")
-  public ResponseEntity<CatDTO> patchById(
-      @PathVariable("catId") UUID id, @RequestBody CatDTO catDto) {
-    Optional<CatDTO> patchedCat = catService.patchById(id, catDto);
-
-    if (patchedCat.isEmpty()) {
-      throw new NotFoundException(String.format(NOT_FOUND, id));
-    }
-
-    return new ResponseEntity<>(patchedCat.get(), HttpStatus.OK);
-  }
-
   @GetMapping("${cat.property.cat-path}")
-  public ResponseEntity<List<CatDTO>> findAllCats() {
-    List<CatDTO> cats = catService.findAll();
-    HttpHeaders httpHeaders = new HttpHeaders();
-    httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-    return new ResponseEntity<>(cats, httpHeaders, HttpStatus.OK);
+  public ResponseEntity<Page<CatDTO>> findAllCats(@RequestParam(required = false) String catName,
+                                                  @RequestParam(required = false) Integer catAge,
+                                                  @RequestParam(required = false) Integer pageNumber,
+                                                  @RequestParam(required = false) Integer pageSize) {
+    Page<CatDTO> cats = catService.findAll(catName, catAge, pageNumber, pageSize);
+    return new ResponseEntity<>(cats, HttpStatus.OK);
   }
 
   @GetMapping("${cat.property.cat-path}" + "/top")
@@ -114,13 +92,13 @@ public class CatController {
   }
 
   @GetMapping("${cat.property.cat-path}" + "/top3")
-  public ResponseEntity<List<CatDTO>> findTopThree(@RequestParam("fieldName") String fieldName)
+  public ResponseEntity<List<CatDTO>> findTop3(@RequestParam("fieldName") String fieldName)
       throws InvalidValueException {
 
     Field field = FieldUtility.getCriteriaFieldForClass(fieldName, Cat.class);
 
     if (FieldUtility.isFieldValid(field)) {
-      return ResponseEntity.ok(catService.findFirst3(fieldName));
+      return ResponseEntity.ok(catService.findTop3(fieldName));
     } else {
       throw new InvalidValueException(String.format(INVALID_VALUE_FIELD, fieldName));
     }
@@ -128,7 +106,7 @@ public class CatController {
 
   @GetMapping("${cat.property.cat-path}" + "/youngest")
   public ResponseEntity<CatDTO> findTheYoungest() {
-    Optional<CatDTO> youngestCat = catService.findFirstByOrderByAge();
+    Optional<CatDTO> youngestCat = catService.findTheYoungest();
 
     if (youngestCat.isEmpty()) {
       throw new NotFoundException("There are no records in database");
@@ -150,6 +128,30 @@ public class CatController {
     } else {
       throw new InvalidValueException(String.format(INVALID_VALUE_FIELD, fieldName));
     }
+  }
+
+  @PutMapping("${cat.property.cat-path-id}")
+  public ResponseEntity<CatDTO> updateById(
+          @PathVariable("catId") UUID id, @Validated @RequestBody CatDTO catDto) {
+    Optional<CatDTO> updatedCat = catService.updateById(id, catDto);
+
+    if (updatedCat.isEmpty()) {
+      throw new NotFoundException(String.format(NOT_FOUND, id));
+    }
+
+    return new ResponseEntity<>(updatedCat.get(), HttpStatus.OK);
+  }
+
+  @PatchMapping("${cat.property.cat-path-id}")
+  public ResponseEntity<CatDTO> patchById(
+          @PathVariable("catId") UUID id, @RequestBody CatDTO catDto) {
+    Optional<CatDTO> patchedCat = catService.patchById(id, catDto);
+
+    if (patchedCat.isEmpty()) {
+      throw new NotFoundException(String.format(NOT_FOUND, id));
+    }
+
+    return new ResponseEntity<>(patchedCat.get(), HttpStatus.OK);
   }
 
   @DeleteMapping("${cat.property.cat-path-id}")

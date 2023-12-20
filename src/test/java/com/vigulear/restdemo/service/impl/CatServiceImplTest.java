@@ -3,16 +3,15 @@ package com.vigulear.restdemo.service.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
+import com.vigulear.restdemo.entity.Cat;
+import com.vigulear.restdemo.mapper.CatMapper;
+import com.vigulear.restdemo.mapper.CatMapperImpl;
+import com.vigulear.restdemo.model.CatDTO;
+import com.vigulear.restdemo.repository.CatRepository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import com.vigulear.restdemo.dto.CatDTO;
-import com.vigulear.restdemo.entity.Cat;
-import com.vigulear.restdemo.mapper.CatMapper;
-import com.vigulear.restdemo.mapper.CatMapperImpl;
-import com.vigulear.restdemo.repository.CatRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -20,6 +19,9 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 /**
  * @author : crme059
@@ -55,9 +57,9 @@ class CatServiceImplTest {
   @Test
   void createAllCats() {
     List<Cat> cats =
-            List.of(
-                    Cat.builder().id(UUID.randomUUID()).name("Couscous").age(8).build(),
-                    Cat.builder().id(UUID.randomUUID()).name("Couscous").age(8).build());
+        List.of(
+            Cat.builder().id(UUID.randomUUID()).name("Couscous").age(8).build(),
+            Cat.builder().id(UUID.randomUUID()).name("Couscous").age(8).build());
     List<CatDTO> catDTOs = cats.stream().map(catMapper::catToCatDto).toList();
 
     when(catRepository.saveAll(any())).thenReturn(cats);
@@ -65,13 +67,6 @@ class CatServiceImplTest {
     List<CatDTO> foundCatDTOS = catService.createAllCats(catDTOs);
 
     assertThat(foundCatDTOS).isNotNull().isNotEmpty();
-  }
-
-  @Test
-  void createAllCats_saveEmptyList_returnEmptyList() {
-    List<CatDTO> foundCatDTOS = catService.findAll();
-
-    assertThat(foundCatDTOS).isNotNull().isEmpty();
   }
 
   @Test
@@ -106,22 +101,25 @@ class CatServiceImplTest {
     List<Cat> cats =
         List.of(
             Cat.builder().id(UUID.randomUUID()).name("Couscous").age(8).build(),
-            Cat.builder().id(UUID.randomUUID()).name("Couscous").age(8).build());
-    List<CatDTO> catDTOS = cats.stream().map(catMapperStub::catToCatDto).toList();
+            Cat.builder().id(UUID.randomUUID()).name("Tiramisu").age(18).build());
+    List<CatDTO> catDTOS = cats.stream().map(catMapper::catToCatDto).toList();
 
-    when(catRepository.findAll()).thenReturn(cats);
+    when(catRepository.findAll(any(PageRequest.class))).thenReturn(new PageImpl<>(cats));
+    cats.forEach(
+        cat -> when(catMapperStub.catToCatDto(cat)).thenReturn(catMapper.catToCatDto(cat)));
 
-    List<CatDTO> foundCatDTOS = catService.findAll();
+    Page<CatDTO> foundCatDtoPage = catService.findAll(null, null, 1, 25);
 
-    assertThat(foundCatDTOS).isNotNull().isNotEmpty().isEqualTo(catDTOS);
+    assertThat(foundCatDtoPage.getContent()).isNotNull().isNotEmpty().isEqualTo(catDTOS);
   }
 
   @Test
   void findAll_returnEmptyList() {
 
-    when(catRepository.findAll()).thenReturn(new ArrayList<>());
+    when(catRepository.findAll(any(PageRequest.class)))
+        .thenReturn(new PageImpl<>(new ArrayList<>()) {});
 
-    List<CatDTO> foundCatDTOS = catService.findAll();
+    Page<CatDTO> foundCatDTOS = catService.findAll(null, null, 1, 25);
 
     assertThat(foundCatDTOS).isNotNull().isEmpty();
   }

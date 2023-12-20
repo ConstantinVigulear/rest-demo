@@ -1,27 +1,35 @@
 package com.vigulear.restdemo.service.impl;
 
+import com.vigulear.restdemo.entity.Cat;
+import com.vigulear.restdemo.mapper.CatMapper;
+import com.vigulear.restdemo.model.CatDTO;
+import com.vigulear.restdemo.repository.CatRepository;
+import com.vigulear.restdemo.service.CatService;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-
-import com.vigulear.restdemo.dto.CatDTO;
-import com.vigulear.restdemo.entity.Cat;
-import com.vigulear.restdemo.mapper.CatMapper;
-import com.vigulear.restdemo.repository.CatRepository;
-import com.vigulear.restdemo.service.CatService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 /**
  * @author : crme059
  * @created : 30-Nov-23, Thursday
  */
+@Slf4j
 @Service
 public class CatServiceImpl implements CatService {
   private final CatRepository catRepository;
   private final CatMapper catMapper;
+
+  private static final int DEFAULT_PAGE = 0;
+  private static final int DEFAULT_PAGE_SIZE = 25;
 
   public CatServiceImpl(CatRepository catRepository, CatMapper catMapper) {
     this.catRepository = catRepository;
@@ -34,10 +42,63 @@ public class CatServiceImpl implements CatService {
   }
 
   @Override
-  public List<CatDTO> findAll() {
-    return catRepository.findAll().stream()
-        .map(catMapper::catToCatDto)
-        .collect(Collectors.toList());
+  public Page<CatDTO> findAll(
+      String catName, Integer catAge, Integer pageNumber, Integer pageSize) {
+
+    Pageable pageRequest = buildPageRequest(pageNumber, pageSize);
+
+    Page<Cat> catPage;
+
+    if (StringUtils.hasText(catName) && catAge == null) {
+      catPage = findCatsByName(catName, pageRequest);
+    } else if (!StringUtils.hasText(catName) && catAge != null) {
+      catPage = findCatsByAge(catAge, pageRequest);
+    } else if (StringUtils.hasText(catName) && catAge != null) {
+      catPage = findCatsByNameAndAge(catName, catAge, pageRequest);
+    } else {
+      catPage = catRepository.findAll(pageRequest);
+    }
+
+    return catPage.map(catMapper::catToCatDto);
+  }
+
+  public PageRequest buildPageRequest(Integer pageNumber, Integer pageSize) {
+    int queryPageNumber;
+    int queryPageSize;
+
+    if (pageNumber != null && pageNumber > 0) {
+      queryPageNumber = pageNumber - 1;
+    } else {
+      queryPageNumber = DEFAULT_PAGE;
+    }
+
+    if (pageSize == null) {
+      queryPageSize = DEFAULT_PAGE_SIZE;
+    } else {
+      if (pageSize > 100000) {
+        queryPageSize = 100000;
+        log.warn("Attempt to get very large set of records: " + pageSize);
+      } else {
+        queryPageSize = pageSize;
+      }
+    }
+
+    Sort sort = Sort.by(Sort.Order.asc("name"));
+
+
+    return PageRequest.of(queryPageNumber, queryPageSize, sort);
+  }
+
+  private Page<Cat> findCatsByNameAndAge(String catName, Integer catAge, Pageable pageable) {
+    return catRepository.findAllByNameIsLikeIgnoreCaseAndAge("%" + catName + "%", catAge, pageable);
+  }
+
+  private Page<Cat> findCatsByAge(Integer catAge, Pageable pageable) {
+    return catRepository.findAllByAge(catAge, pageable);
+  }
+
+  public Page<Cat> findCatsByName(String catName, Pageable pageable) {
+    return catRepository.findAllByNameIsLikeIgnoreCase("%" + catName + "%", pageable);
   }
 
   @Override
@@ -47,7 +108,7 @@ public class CatServiceImpl implements CatService {
   }
 
   @Override
-  public List<CatDTO> findFirst3(String fieldName) {
+  public List<CatDTO> findTop3(String fieldName) {
     Sort sort = Sort.by(fieldName).ascending();
     List<Cat> cats = catRepository.findFirst3By(sort);
 
@@ -55,15 +116,13 @@ public class CatServiceImpl implements CatService {
   }
 
   @Override
-  public Optional<CatDTO> findFirstByOrderByAge() {
+  public Optional<CatDTO> findTheYoungest() {
     AtomicReference<Optional<CatDTO>> atomicReference = new AtomicReference<>();
 
     catRepository
         .findFirstByOrderByAge()
         .ifPresentOrElse(
-            foundCat -> {
-              atomicReference.set(Optional.of(catMapper.catToCatDto(foundCat)));
-            },
+            foundCat -> atomicReference.set(Optional.of(catMapper.catToCatDto(foundCat))),
             () -> atomicReference.set(Optional.empty()));
 
     return atomicReference.get();
@@ -76,8 +135,8 @@ public class CatServiceImpl implements CatService {
 
   @Override
   public CatDTO createCat(CatDTO catDto) {
-    var newCatDto = catRepository.save(catMapper.catDtoToCat(catDto));
-    return catMapper.catToCatDto(newCatDto);
+    var newCat = catRepository.save(catMapper.catDtoToCat(catDto));
+    return catMapper.catToCatDto(newCat);
   }
 
   @Override

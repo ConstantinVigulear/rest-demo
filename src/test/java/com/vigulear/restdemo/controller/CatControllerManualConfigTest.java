@@ -7,7 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.vigulear.restdemo.dto.CatDTO;
+import com.vigulear.restdemo.model.CatDTO;
 import com.vigulear.restdemo.entity.Cat;
 import com.vigulear.restdemo.mapper.CatMapper;
 import com.vigulear.restdemo.mapper.CatMapperImpl;

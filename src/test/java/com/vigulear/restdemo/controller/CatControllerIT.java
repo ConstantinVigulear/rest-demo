@@ -1,20 +1,29 @@
 package com.vigulear.restdemo.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vigulear.restdemo.dto.CatDTO;
 import com.vigulear.restdemo.entity.Cat;
 import com.vigulear.restdemo.exceptions.InvalidValueException;
 import com.vigulear.restdemo.exceptions.NotFoundException;
 import com.vigulear.restdemo.mapper.CatMapper;
+import com.vigulear.restdemo.model.CatDTO;
 import com.vigulear.restdemo.repository.CatRepository;
 import com.vigulear.restdemo.service.CatService;
 import jakarta.transaction.Transactional;
+import java.util.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,15 +31,6 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-
-import java.util.*;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author : crme059
@@ -49,6 +49,9 @@ class CatControllerIT {
   @Value("${cat.property.cat-path-id}")
   String CAT_PATH_ID;
 
+  @Value("${cat.property.cat-path}")
+  String CAT_PATH;
+
   MockMvc mockMvc;
 
   @BeforeEach
@@ -56,15 +59,91 @@ class CatControllerIT {
     mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
   }
 
+  @Test
+  void testFindAllCats() {
+    ResponseEntity<Page<CatDTO>> responseEntity = catController.findAllCats(null, null, 1, 25);
+
+    assertThat(responseEntity).isNotNull();
+    assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(responseEntity.getBody()).isNotEmpty();
+    assertThat(responseEntity.getBody().getContent().size()).isEqualTo(25);
+    assertThat(responseEntity.getBody().getTotalElements()).isEqualTo(100011);
+  }
+
+  @Test
+  void testFindAllCatsMaximumPageSize() {
+    Page<CatDTO> catDTOPage = catController.findAllCats(null, null, null, 1500000).getBody();
+
+    assertThat(catDTOPage).isNotNull();
+    assertThat(catDTOPage.getContent()).isNotNull();
+    assertThat(catDTOPage.getContent().size()).isEqualTo(100000);
+  }
+
+  @Test
+  void testFindAllCatsByNameAndAgePage1() throws Exception {
+    mockMvc
+            .perform(
+                    get(CAT_PATH)
+                            .queryParam("catName", "m")
+                            .queryParam("catAge", "11")
+                            .queryParam("pageNumber", "1")
+                            .queryParam("pageSize", "50"))
+            .andExpectAll(
+                    status().isOk(),
+                    jsonPath("$.content.size()").value(50),
+                    jsonPath("$.totalPages").value(16),
+                    jsonPath("$.totalElements").value(775));
+  }
+
+  @Test
+  void testFindAllCatsByNameAndAgePage16() throws Exception {
+    mockMvc
+        .perform(
+            get(CAT_PATH)
+                .queryParam("catName", "m")
+                .queryParam("catAge", "11")
+                .queryParam("pageNumber", "16")
+                .queryParam("pageSize", "50"))
+        .andExpectAll(
+                status().isOk(),
+                jsonPath("$.content.size()").value(25),
+                jsonPath("$.totalPages").value(16),
+                jsonPath("$.totalElements").value(775));
+  }
+
+  @Test
+  void testFindAllCatsByName() throws Exception {
+    mockMvc
+        .perform(
+            get(CAT_PATH)
+                .queryParam("catName", "kel")
+                .queryParam("pageSize", "1000000"))
+        .andExpectAll(status().isOk(), jsonPath("$.content.size()").value(278));
+  }
+
+  @Test
+  void testFindAllCatsByAge() throws Exception {
+    mockMvc
+        .perform(get(CAT_PATH).queryParam("catAge", String.valueOf(7)))
+        .andExpectAll(status().isOk(), jsonPath("$.totalElements").value(5058));
+  }
+
+  @Test
+  void testFindAllCatsByNameAndAge() throws Exception {
+    mockMvc
+        .perform(get(CAT_PATH).queryParam("catAge", String.valueOf(8)).queryParam("catName", "mi"))
+        .andExpectAll(status().isOk(), jsonPath("$.totalElements").value(154));
+  }
+
   @Rollback
   @Transactional
   @Test
   void createCat() {
     CatDTO catDto = CatDTO.builder().name("Napoleon").age(11).build();
-    int initialDatabaseSize = catService.findAll().size();
+    long initialDatabaseSize = catRepository.count();
 
     ResponseEntity<CatDTO> responseEntity = catController.createCat(catDto);
-    int postDatabaseSize = catService.findAll().size();
+    long postDatabaseSize = catRepository.count();
 
     assertThat(responseEntity).isNotNull();
     assertThat(responseEntity.getStatusCode()).isNotNull().isEqualTo(HttpStatus.CREATED);
@@ -79,20 +158,9 @@ class CatControllerIT {
   @Rollback
   @Transactional
   @Test
-  void findAllCats() {
-    ResponseEntity<List<CatDTO>> responseEntity = catController.findAllCats();
-
-    assertThat(responseEntity).isNotNull();
-    assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(responseEntity.getBody()).isNotEmpty();
-  }
-
-  @Rollback
-  @Transactional
-  @Test
   void findAllCats_returnsEmptyList() {
     catRepository.deleteAll();
-    List<CatDTO> catDTOS = catController.findAllCats().getBody();
+    Page<CatDTO> catDTOS = catController.findAllCats(null, null, 1, 25).getBody();
 
     assertThat(catDTOS).isNotNull().isEmpty();
   }
@@ -154,7 +222,7 @@ class CatControllerIT {
   void findTopThree() throws InvalidValueException {
     String fieldName = "name";
 
-    List<CatDTO> catDtosResponse = catController.findTopThree(fieldName).getBody();
+    List<CatDTO> catDtosResponse = catController.findTop3(fieldName).getBody();
 
     assertThat(catDtosResponse).isNotNull().isNotEmpty().size().isEqualTo(3);
     for (int i = 0; i < catDtosResponse.size() - 1; i++) {
@@ -168,7 +236,7 @@ class CatControllerIT {
     String fieldName = "111";
     String errorMessage = String.format("No such field as '%s'", fieldName);
 
-    assertThatThrownBy(() -> catController.findTopThree(fieldName))
+    assertThatThrownBy(() -> catController.findTop3(fieldName))
         .isInstanceOf(InvalidValueException.class)
         .hasMessage(errorMessage);
   }
@@ -176,7 +244,7 @@ class CatControllerIT {
   @Test
   void findTheYoungest() {
     CatDTO catDto = catController.findTheYoungest().getBody();
-    List<CatDTO> catDTOS = catService.findAll();
+    Page<CatDTO> catDTOS = catService.findAll(null, null, 1, 25);
 
     assertThat(catDto).isNotNull();
     catDTOS.forEach(cat -> assertThat(cat.getAge()).isGreaterThanOrEqualTo(catDto.getAge()));
@@ -258,13 +326,12 @@ class CatControllerIT {
   }
 
   @Test
-  @DisplayName("PATCH with valid payload returns Http 200 OK")
+  @DisplayName("PATCH with invalid payload returns Http 400 Bad Request")
   void patchById_badName() throws Exception {
     Cat cat = catRepository.findAll().getFirst();
 
     Map<String, Object> catMap = new HashMap<>();
     catMap.put("name", "catName012345678901234567890123456789012345678901234567890123456789");
-
     mockMvc
         .perform(
             patch(CAT_PATH_ID, cat.getId())

@@ -17,7 +17,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author : crme059
@@ -27,28 +26,28 @@ import java.util.stream.Collectors;
 public class CustomErrorController {
   private static final Logger log = LoggerFactory.getLogger(CustomErrorController.class);
 
-    @ExceptionHandler
-    public ResponseEntity<String> handleInvalidValueException(InvalidValueException exception) {
-      log.error("Bad request error: {}", exception.toString());
-      return new ResponseEntity<>(exception.getMessage(), HttpStatus.BAD_REQUEST);
-    }
+  @ExceptionHandler
+  public ResponseEntity<String> handleInvalidValueException(InvalidValueException exception) {
+    log.error("Bad request error: {}", exception.toString());
+    return new ResponseEntity<>(exception.getMessage(), HttpStatus.BAD_REQUEST);
+  }
 
-    @ExceptionHandler
-    public ResponseEntity<String> handleMethodArgumentTypeMismatchException(
-        MethodArgumentTypeMismatchException exception) {
-      log.error("Bad request error: {}", exception.toString());
-      return new ResponseEntity<>(
-          "Invalid value \"" + exception.getValue() + "\" for parameter", HttpStatus.BAD_REQUEST);
-    }
+  @ExceptionHandler
+  public ResponseEntity<String> handleMethodArgumentTypeMismatchException(
+      MethodArgumentTypeMismatchException exception) {
+    log.error("Bad request error: {}", exception.toString());
+    return new ResponseEntity<>(
+        "Invalid value \"" + exception.getValue() + "\" for parameter", HttpStatus.BAD_REQUEST);
+  }
 
+  // required more for put controller method since this method cannot validate input parameters
+  // since some DTO fields may be null
   @ExceptionHandler
   public ResponseEntity<List<Map<String, String>>> handleJPAViolation(
       TransactionSystemException exception) {
     ResponseEntity.BodyBuilder responseEntity = ResponseEntity.badRequest();
 
-    if (exception.getCause().getCause() instanceof ConstraintViolationException) {
-      ConstraintViolationException ve =
-          (ConstraintViolationException) exception.getCause().getCause();
+    if (exception.getCause().getCause() instanceof ConstraintViolationException ve) {
 
       List<Map<String, String>> errors =
           ve.getConstraintViolations().stream()
@@ -80,6 +79,7 @@ public class CustomErrorController {
     return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
   }
 
+  // handles @Validated controller method parameters exception
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<List<Map<String, String>>> handleBindException(
       MethodArgumentNotValidException exception) {

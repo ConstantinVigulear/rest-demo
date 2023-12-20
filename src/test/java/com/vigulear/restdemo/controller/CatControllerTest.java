@@ -8,18 +8,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import com.vigulear.restdemo.dto.CatDTO;
 import com.vigulear.restdemo.entity.Cat;
 import com.vigulear.restdemo.exceptions.NotFoundException;
 import com.vigulear.restdemo.mapper.CatMapper;
 import com.vigulear.restdemo.mapper.CatMapperImpl;
+import com.vigulear.restdemo.model.CatDTO;
 import com.vigulear.restdemo.service.CatService;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -28,6 +26,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -199,7 +199,8 @@ class CatControllerTest {
   @Test
   @DisplayName("PATCH with valid payload returns Http 200 OK")
   void patchById_validPayload_returnsPatched() throws Exception {
-    CatDTO catToPatchDTO = CatDTO.builder().id(UUID.randomUUID()).name("Millefoglie").age(11).build();
+    CatDTO catToPatchDTO =
+        CatDTO.builder().id(UUID.randomUUID()).name("Millefoglie").age(11).build();
     CatDTO patch = CatDTO.builder().name("Humus").build();
     String patchJson = objectMapper.writeValueAsString(patch);
 
@@ -279,21 +280,21 @@ class CatControllerTest {
   }
 
   @Test
-  @DisplayName("GET returns list of cat dtos and Http 200 Ok")
+  @DisplayName("GET all cats returns list of cat dtos and Http 200 Ok")
   void getAllCats() throws Exception {
     List<Cat> cats =
         List.of(
             Cat.builder().name("Couscous").age(0).build(),
             Cat.builder().name("Tiramisu").age(7).build());
     List<CatDTO> catDTOS = cats.stream().map(catMapper::catToCatDto).toList();
-    String catDtosJson = objectMapper.writeValueAsString(catDTOS);
+    Page<CatDTO> catDTOPage = new PageImpl<>(catDTOS);
 
-    when(catService.findAll()).thenReturn(catDTOS);
+    when(catService.findAll(any(), any(), any(), any())).thenReturn(catDTOPage);
 
     mockMvc
         .perform(get(CAT_PATH))
-        .andExpectAll(status().isOk(), content().json(catDtosJson), jsonPath("$.size()").value(2));
-    verify(catService, times(1)).findAll();
+        .andExpectAll(status().isOk(), jsonPath("$.content.size()").value(2));
+    verify(catService, times(1)).findAll(null, null, null, null);
   }
 
   @Test
@@ -367,7 +368,7 @@ class CatControllerTest {
             CatDTO.builder().name("Tiramisu").age(7).build(),
             CatDTO.builder().name("Humus").age(1).build());
 
-    when(catService.findFirst3(fieldName)).thenReturn(catDTOs);
+    when(catService.findTop3(fieldName)).thenReturn(catDTOs);
 
     mockMvc
         .perform(get(CAT_PATH_TOP3, fieldName))
@@ -375,7 +376,7 @@ class CatControllerTest {
             status().isOk(),
             content().contentType(MediaType.APPLICATION_JSON),
             content().json(objectMapper.writeValueAsString(catDTOs)));
-    verify(catService, times(1)).findFirst3(stringArgumentCaptor.capture());
+    verify(catService, times(1)).findTop3(stringArgumentCaptor.capture());
 
     assertThat(fieldName).isEqualTo(stringArgumentCaptor.getValue());
   }
@@ -394,7 +395,7 @@ class CatControllerTest {
             content().contentType(MediaType.TEXT_PLAIN_VALUE + ";charset=UTF-8"),
             content().string(errorMessage));
 
-    verify(catService, times(0)).findFirst3(any());
+    verify(catService, times(0)).findTop3(any());
   }
 
   @Test
@@ -402,7 +403,7 @@ class CatControllerTest {
   void findTheYoungest_returnValidCat() throws Exception {
     var catDTO = CatDTO.builder().id(UUID.randomUUID()).name("Couscous").age(0).build();
     String catDtoJson = objectMapper.writeValueAsString(catDTO);
-    when(catService.findFirstByOrderByAge()).thenReturn(Optional.of(catDTO));
+    when(catService.findTheYoungest()).thenReturn(Optional.of(catDTO));
 
     mockMvc
         .perform(get(CAT_PATH + "/youngest"))
@@ -413,14 +414,14 @@ class CatControllerTest {
             jsonPath("$.id").value(catDTO.getId().toString()),
             jsonPath("$.name").value(catDTO.getName()),
             jsonPath("$.age").value(catDTO.getAge()));
-    verify(catService, times(1)).findFirstByOrderByAge();
+    verify(catService, times(1)).findTheYoungest();
   }
 
   @Test
   @DisplayName("GET youngest throws InvalidValueException and Http 400 Bad Request")
   void findTheYoungest_throwsInvalidValueException() throws Exception {
 
-    when(catService.findFirstByOrderByAge())
+    when(catService.findTheYoungest())
         .thenThrow(new NotFoundException("There are no records in data base"));
 
     mockMvc
@@ -430,7 +431,7 @@ class CatControllerTest {
             content().contentType(MediaType.TEXT_PLAIN_VALUE + ";charset=UTF-8"),
             content().string("There are no records in data base"));
 
-    verify(catService, times(1)).findFirstByOrderByAge();
+    verify(catService, times(1)).findTheYoungest();
   }
 
   @Test

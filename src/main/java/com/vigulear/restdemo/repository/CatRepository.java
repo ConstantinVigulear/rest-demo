@@ -1,6 +1,8 @@
 package com.vigulear.restdemo.repository;
 
 import com.vigulear.restdemo.entity.Cat;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -36,4 +38,10 @@ public interface CatRepository extends JpaRepository<Cat, UUID> {
           + "ELSE 0 END) "
           + "FROM Cat c")
   Integer findTotalBy(@Param("fieldName") String fieldName);
+
+  Page<Cat> findAllByNameIsLikeIgnoreCase(String catName, Pageable pageable);
+
+  Page<Cat> findAllByAge(Integer catAge, Pageable pageable);
+
+  Page<Cat> findAllByNameIsLikeIgnoreCaseAndAge(String catName, Integer catAge, Pageable pageable);
 }
