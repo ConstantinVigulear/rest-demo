@@ -3,6 +3,7 @@ package com.vigulear.restdemo.bootstrap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.vigulear.restdemo.repository.CatRepository;
+import com.vigulear.restdemo.repository.CustomerRepository;
 import com.vigulear.restdemo.service.CatCsvService;
 import com.vigulear.restdemo.service.impl.CatCsvServiceImpl;
 import java.io.FileNotFoundException;
@@ -20,12 +21,14 @@ import org.springframework.context.annotation.Import;
 class BootstrapDataTest {
 
   @Autowired CatRepository catRepository;
+  @Autowired
+  CustomerRepository customerRepository;
   @Autowired CatCsvService catCsvService;
   BootstrapData bootstrapData;
 
   @BeforeEach
   void setUp() {
-    bootstrapData = new BootstrapData(catRepository, catCsvService);
+    bootstrapData = new BootstrapData(catRepository, catCsvService, customerRepository);
   }
 
   @Test

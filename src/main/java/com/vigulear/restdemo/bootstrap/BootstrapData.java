@@ -1,13 +1,17 @@
 package com.vigulear.restdemo.bootstrap;
 
 import com.vigulear.restdemo.entity.Cat;
+import com.vigulear.restdemo.entity.Customer;
 import com.vigulear.restdemo.model.CatCSVRecord;
 import com.vigulear.restdemo.repository.CatRepository;
+import com.vigulear.restdemo.repository.CustomerRepository;
 import com.vigulear.restdemo.service.CatCsvService;
 import jakarta.transaction.Transactional;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
+import java.util.Set;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -23,6 +27,7 @@ public class BootstrapData implements CommandLineRunner {
 
   private final CatRepository catRepository;
   private final CatCsvService catCsvService;
+  private final CustomerRepository customerRepository;
 
   @Transactional
   @Override
@@ -33,8 +38,8 @@ public class BootstrapData implements CommandLineRunner {
 
   private void loadCatData() {
     if (catRepository.count() == 0) {
-      List<Cat> cats =
-          List.of(
+      Set<Cat> cats =
+          Set.of(
               Cat.builder().name("Millefoglie").age(1).build(),
               Cat.builder().name("Couscous").age(0).build(),
               Cat.builder().name("Tiramisu").age(7).build(),
@@ -48,6 +53,15 @@ public class BootstrapData implements CommandLineRunner {
               Cat.builder().name("Robert").age(13).build());
 
       catRepository.saveAll(cats);
+    }
+
+    if (customerRepository.count() == 0) {
+      Set<Customer> customers =
+          Set.of(
+              Customer.builder().name("John").email("john.asdf@gmail.com").build(),
+              Customer.builder().name("Luna").email("luna.rert@gmail.com").build(),
+              Customer.builder().name("Boris").email("boris.facz@gmail.com").build());
+      customerRepository.saveAll(customers);
     }
   }
 

@@ -26,26 +26,6 @@ class CatRepositoryTest {
 
   @Autowired CatRepository catRepository;
 
-//  @BeforeEach
-//  void setUp() {
-//    List<Cat> cats =
-//        new ArrayList<>() {
-//          {
-//            add(Cat.builder().name("Georges").age(1).build());
-//            add(Cat.builder().name("Couscous").age(0).build());
-//            add(Cat.builder().name("Object").age(3).build());
-//            add(Cat.builder().name("Engin").age(6).build());
-//            add(Cat.builder().name("Revision").age(8).build());
-//            add(Cat.builder().name("Jacobson").age(10).build());
-//            add(Cat.builder().name("Ivar").age(4).build());
-//            add(Cat.builder().name("Enzo").age(6).build());
-//            add(Cat.builder().name("Finland").age(15).build());
-//            add(Cat.builder().name("Robert").age(13).build());
-//          }
-//        };
-//    catRepository.saveAll(cats);
-//  }
-
   @Test
   void save_returnValidCatDto() {
     var catNew = Cat.builder().name("Neko").age(11).build();

@@ -4,13 +4,9 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.id.UUIDGenerator;
-import org.hibernate.id.uuid.UuidGenerator;
+import org.hibernate.annotations.*;
 import org.hibernate.type.SqlTypes;
 
 /**
@@ -18,18 +14,18 @@ import org.hibernate.type.SqlTypes;
  * @created : 30-Nov-23, Thursday
  */
 @Getter
+@EqualsAndHashCode
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 @MappedSuperclass
 public abstract class AbstractEntity<T> {
   @Id
-  @GeneratedValue(generator = "idGenerator")
-  @GenericGenerator(name = "idGenerator", type = UuidGenerator.class)
+  @UuidGenerator
   @JdbcTypeCode(SqlTypes.CHAR)
   @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
   private UUID id;
 
   @Version private Integer version;
-  @CreationTimestamp private LocalDateTime createdOn;
+  @CreationTimestamp @Column(updatable = false) private LocalDateTime createdOn;
   @UpdateTimestamp private LocalDateTime updatedOn;
 
   public T setId(UUID id) {
